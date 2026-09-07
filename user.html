@@ -117,7 +117,7 @@
 
         .grid-2 {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1.2fr;
             gap: 20px;
         }
 
@@ -161,52 +161,78 @@
             padding: 20px;
         }
 
-        /* 게임별 결과 및 기록 태그 */
-        .game-item {
-            padding: 12px 0;
-            border-bottom: 1px solid var(--card-border);
+        /* 🎮 게임별 결과: 2열 그리드(한 줄에 두 칸) 레이아웃 */
+        #game-results-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 항상 2열 */
+            gap: 10px;
         }
 
-            .game-item:last-child {
-                border-bottom: none;
-            }
-
-        .game-ranks-row {
-            margin-top: 8px;
+        .game-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            font-size: 0.95rem;
-            color: var(--text-muted);
+            justify-content: flex-start;
+        }
+
+        .game-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 4px;
+        }
+
+        .game-ranks-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .rank-entry {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(15, 23, 42, 0.4);
-            padding: 6px 10px;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            min-width: 0; /* flex 자식 줄임표 활성화 */
         }
 
         .rank-entry-left {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .team-name-tag {
             color: var(--text);
             font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .record-tag {
             color: var(--highlight);
-            font-size: 0.85rem;
+            font-size: 0.72rem;
             background: rgba(56, 189, 248, 0.15);
-            padding: 2px 8px;
+            padding: 1px 5px;
             border-radius: 4px;
             font-weight: 600;
+            white-space: nowrap;
+            margin-left: 4px;
+            flex-shrink: 0;
         }
 
         /* ================= 📱 모바일 최적화 미디어 쿼리 (768px 이하) ================= */
@@ -226,7 +252,7 @@
             }
 
             .card {
-                padding: 16px 12px;
+                padding: 14px 10px;
             }
 
             /* 모바일 전용 세로 랭킹 카드 포디움 */
@@ -279,6 +305,24 @@
                 margin-top: 0;
                 font-size: 1.4rem;
             }
+
+            /* 모바일에서도 한 줄에 2개씩 유지하면서 여백 미세 조정 */
+            #game-results-list {
+                gap: 8px;
+            }
+
+            .game-item {
+                padding: 8px 6px;
+            }
+
+            .game-title {
+                font-size: 0.85rem;
+            }
+
+            .rank-entry {
+                padding: 3px 5px;
+                font-size: 0.76rem;
+            }
         }
     </style>
 </head>
@@ -288,7 +332,7 @@
             <h1>🏆 실시간 점수 현황판</h1>
         </header>
 
-        <!-- 상단 TOP 3 (모바일에서는 1,2,3위 리스트형 카드로 전환) -->
+        <!-- 상단 TOP 3 -->
         <div class="podium-container" id="podium-area"></div>
 
         <div class="grid-2">
@@ -298,7 +342,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 70px;">순위</th>
+                            <th style="width: 60px;">순위</th>
                             <th>조 이름</th>
                             <th style="text-align: right;">총점</th>
                         </tr>
@@ -309,11 +353,11 @@
                 </table>
             </div>
 
-            <!-- 게임별 결과 -->
+            <!-- 게임별 결과: 한 줄에 2칸씩 아담하게 배치 -->
             <div class="card">
                 <h2>🎮 게임별 순위 및 기록</h2>
                 <div id="game-results-list">
-                    <div class="empty-state">등록된 게임 결과가 없습니다.</div>
+                    <div class="empty-state" style="grid-column: span 2;">등록된 게임 결과가 없습니다.</div>
                 </div>
             </div>
         </div>
@@ -351,7 +395,7 @@
         function renderEmpty() {
             document.getElementById('podium-area').innerHTML = '';
             document.getElementById('leaderboard-tbody').innerHTML = '<tr><td colspan="3" class="empty-state">팀 정보가 없습니다.</td></tr>';
-            document.getElementById('game-results-list').innerHTML = '<div class="empty-state">등록된 게임 결과가 없습니다.</div>';
+            document.getElementById('game-results-list').innerHTML = '<div class="empty-state" style="grid-column: span 2;">등록된 게임 결과가 없습니다.</div>';
         }
 
         function render(state) {
@@ -389,10 +433,10 @@
                     `).join('');
             }
 
-            // 게임별 순위 및 기록 렌더링
+            // 게임별 순위 및 기록 렌더링 (2칸 그리드 적용)
             const gameResultsList = document.getElementById('game-results-list');
             if (games.length === 0) {
-                gameResultsList.innerHTML = '<div class="empty-state">등록된 게임 결과가 없습니다.</div>';
+                gameResultsList.innerHTML = '<div class="empty-state" style="grid-column: span 2;">등록된 게임 결과가 없습니다.</div>';
             } else {
                 gameResultsList.innerHTML = games.map(g => {
                     const findTeam = (rankId) => rawTeams.find(t => String(t.id) === String(rankId));
@@ -415,11 +459,11 @@
 
                     return `
                             <div class="game-item">
-                                <strong style="font-size: 1.05rem;">🎮 ${g.name || '게임'}</strong>
+                                <div class="game-title">🎮 ${g.name || '게임'}</div>
                                 <div class="game-ranks-row">
-                                    ${formatEntry('🥇 1위', t1, g.record1)}
-                                    ${formatEntry('🥈 2위', t2, g.record2)}
-                                    ${formatEntry('🥉 3위', t3, g.record3)}
+                                    ${formatEntry('🥇', t1, g.record1)}
+                                    ${formatEntry('🥈', t2, g.record2)}
+                                    ${formatEntry('🥉', t3, g.record3)}
                                 </div>
                             </div>
                         `;
