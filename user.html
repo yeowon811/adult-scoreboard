@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>실시간 점수 현황판</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a; --card-bg: #1e293b; --card-border: #334155;
+      --text: #f8fafc; --text-muted: #94a3b8;
+      --gold: #f59e0b; --silver: #cbd5e1; --bronze: #d97706;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg); color: var(--text); padding: 30px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 30px; }
+    h1 { font-size: 2.4rem; font-weight: 900; letter-spacing: -1px; }
+
+    /* 포디움 스타일 */
+    .podium-container {
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 24px; margin-bottom: 40px;
+    }
+    .podium-card {
+      background: var(--card-bg); border-radius: 16px; text-align: center;
+      padding: 24px; width: 260px; border: 2px solid var(--card-border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
+      transition: all 0.5s ease;
+    }
+    .podium-card.rank-1 {
+      height: 270px; border-color: var(--gold);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.15) 0%, var(--card-bg) 100%);
+    }
+    .podium-card.rank-2 { height: 230px; border-color: var(--silver); }
+    .podium-card.rank-3 { height: 200px; border-color: var(--bronze); }
+    .badge { font-size: 2.5rem; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); }
+    .team-title { font-size: 1.6rem; font-weight: 800; margin-top: 24px; }
+    .team-score { font-size: 2.4rem; font-weight: 900; color: var(--gold); margin-top: 10px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; }
+    .card h2 { font-size: 1.3rem; margin-bottom: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 1.1rem; }
+    th { color: var(--text-muted); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🏆 실시간 점수 현황판</h1>
+  </header>
+
+  <div class="podium-container" id="podium-area"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>전체 순위 리스트</h2>
+      <table>
+        <thead>
+          <tr><th style="width: 80px;">순위</th><th>조 이름</th><th style="text-align: right;">총점</th></tr>
+        </thead>
+        <tbody id="leaderboard-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>게임별 1, 2, 3위 결과</h2>
+      <div id="game-results-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 1. 본인의 Firebase 설정값을 여기에 넣으세요
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "...",
+    messagingSenderId: "...",
+    appId: "..."
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // 2. 실시간 데이터 수신 및 화면 갱신
+  db.ref('scoreboard').on('value', (snapshot) => {
+    const state = snapshot.val();
+    if (!state) return;
+    render(state);
+  });
+
+  function render(state) {
+    const teams = state.teams || [];
+    const games = state.games || [];
+    const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+
+    // 포디움 렌더링
+    const podiumOrder = [
+      { rank: 2, team: sortedTeams[1], badge: '🥈', cls: 'rank-2' },
+      { rank: 1, team: sortedTeams[0], badge: '🥇', cls: 'rank-1' },
+      { rank: 3, team: sortedTeams[2], badge: '🥉', cls: 'rank-3' }
+    ];
+    document.getElementById('podium-area').innerHTML = podiumOrder.map(item => `
+      <div class="podium-card ${item.cls}">
+        <span class="badge">${item.badge}</span>
+        <div class="team-title">${item.team ? item.team.name : '-'}</div>
+        <div class="team-score">${item.team ? item.team.score.toLocaleString() + 'P' : '0P'}</div>
+      </div>
+    `).join('');
+
+    // 순위표
+    document.getElementById('leaderboard-tbody').innerHTML = sortedTeams.map((team, idx) => `
+      <tr>
+        <td><strong>${idx + 1}위</strong></td>
+        <td>${team.name}</td>
+        <td style="text-align: right; color: var(--gold); font-weight: 800;">${team.score.toLocaleString()} P</td>
+      </tr>
+    `).join('');
+
+    // 게임별 순위
+    document.getElementById('game-results-list').innerHTML = games.map(g => {
+      const t1 = teams.find(t => t.id === Number(g.rank1));
+      const t2 = teams.find(t => t.id === Number(g.rank2));
+      const t3 = teams.find(t => t.id === Number(g.rank3));
+      return `
+        <div style="padding: 12px 0; border-bottom: 1px solid var(--card-border);">
+          <strong style="font-size: 1.05rem;">🎮 ${g.name}</strong>
+          <div style="margin-top: 4px; color: var(--text-muted); font-size: 0.95rem;">
+            🥇 1위: <span style="color: var(--text); font-weight: 600;">${t1 ? t1.name : '-'}</span> | 
+            🥈 2위: <span style="color: var(--text); font-weight: 600;">${t2 ? t2.name : '-'}</span> | 
+            🥉 3위: <span style="color: var(--text); font-weight: 600;">${t3 ? t3.name : '-'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+</script>
+</body>
+</html>
