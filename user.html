@@ -14,8 +14,11 @@
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --gold: #f59e0b;
+            --gold-light: #fbbf24;
             --silver: #cbd5e1;
+            --silver-light: #f1f5f9;
             --bronze: #d97706;
+            --bronze-light: #f97316;
             --highlight: #38bdf8;
         }
 
@@ -30,12 +33,12 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            padding: 20px 14px;
+            padding: 24px 16px;
             line-height: 1.4;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
@@ -50,71 +53,171 @@
             letter-spacing: -0.5px;
         }
 
-        /* 기본(PC) 포디움 스타일 */
+        /* ================= 🏛️ 올림픽 시상대 (Podium) CSS ================= */
+        .podium-wrapper {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 30px 20px 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 16px 36px rgba(0,0,0,0.35);
+        }
+
         .podium-container {
             display: flex;
-            justify-content: center;
             align-items: flex-end;
-            gap: 16px;
-            margin-bottom: 30px;
+            justify-content: center;
+            gap: 14px;
+            max-width: 650px;
+            margin: 0 auto;
         }
 
-        .podium-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            text-align: center;
-            padding: 20px;
-            width: 260px;
-            border: 2px solid var(--card-border);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            position: relative;
-            transition: all 0.3s ease;
+        .podium-slot {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            align-items: center;
+            min-width: 0;
         }
 
-        .podium-card.rank-1 {
-            height: 250px;
-            border-color: var(--gold);
-            background: linear-gradient(180deg, rgba(245, 158, 11, 0.15) 0%, var(--card-bg) 100%);
-            order: 2;
+            /* 1등(가운데), 2등(좌측), 3등(우측) 순서 고정 */
+            .podium-slot.rank-2 {
+                order: 1;
+            }
+
+            .podium-slot.rank-1 {
+                order: 2;
+            }
+
+            .podium-slot.rank-3 {
+                order: 3;
+            }
+
+        /* 단상 위에 올라가는 선수/팀 정보 */
+        .podium-athlete {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .podium-card.rank-2 {
-            height: 210px;
-            border-color: var(--silver);
-            order: 1;
-        }
-
-        .podium-card.rank-3 {
-            height: 190px;
-            border-color: var(--bronze);
-            order: 3;
-        }
-
-        .badge {
+        .podium-badge {
             font-size: 2.2rem;
-            position: absolute;
-            top: -24px;
-            left: 50%;
-            transform: translateX(-50%);
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+            margin-bottom: 6px;
         }
 
-        .team-title {
-            font-size: 1.4rem;
+        .podium-slot.rank-1 .podium-badge {
+            font-size: 2.8rem;
+            animation: bounce 2s infinite alternate ease-in-out;
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .podium-name {
+            font-size: 1.05rem;
             font-weight: 800;
-            margin-top: 10px;
-            word-break: break-all;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            padding: 0 4px;
         }
 
-        .team-score {
-            font-size: 2rem;
+        .podium-score {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .podium-slot.rank-1 .podium-name {
+            font-size: 1.25rem;
+            color: #fff;
+        }
+
+        .podium-slot.rank-1 .podium-score {
+            font-size: 1.15rem;
+            color: var(--gold-light);
+        }
+
+        /* 실제 입체 단상 블록 */
+        .podium-step {
+            width: 100%;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 14px;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.25), 0 -4px 12px rgba(0,0,0,0.3);
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .podium-number {
+            font-size: 2.6rem;
             font-weight: 900;
-            color: var(--gold);
-            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.25);
+            line-height: 1;
+            user-select: none;
         }
 
+        /* 단상별 높이 및 색상 테마 */
+        .podium-slot.rank-1 .podium-step {
+            height: 170px;
+            background: linear-gradient(180deg, #b45309 0%, #78350f 100%);
+            border-color: var(--gold-light);
+        }
+
+        .podium-slot.rank-1 .podium-number {
+            font-size: 3.5rem;
+            color: rgba(254, 240, 138, 0.4);
+        }
+
+        .podium-slot.rank-2 .podium-step {
+            height: 125px;
+            background: linear-gradient(180deg, #64748b 0%, #334155 100%);
+            border-color: var(--silver-light);
+        }
+
+        .podium-slot.rank-2 .podium-number {
+            color: rgba(241, 245, 249, 0.35);
+        }
+
+        .podium-slot.rank-3 .podium-step {
+            height: 90px;
+            background: linear-gradient(180deg, #9a3412 0%, #431407 100%);
+            border-color: var(--bronze-light);
+        }
+
+        .podium-slot.rank-3 .podium-number {
+            color: rgba(253, 186, 116, 0.35);
+        }
+
+        /* 시상대 밑받침 베이스 라인 */
+        .podium-base {
+            max-width: 670px;
+            margin: 0 auto;
+            height: 10px;
+            background: #090d16;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+        }
+
+        /* ================= 📊 하단 정보 영역 ================= */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1.2fr;
@@ -129,15 +232,15 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .card h2 {
-            font-size: 1.2rem;
-            margin-bottom: 14px;
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+            .card h2 {
+                font-size: 1.15rem;
+                margin-bottom: 14px;
+                border-bottom: 1px solid var(--card-border);
+                padding-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
 
         table {
             width: 100%;
@@ -145,14 +248,14 @@
         }
 
         th, td {
-            padding: 12px 8px;
+            padding: 10px 8px;
             border-bottom: 1px solid var(--card-border);
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         th {
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .empty-state {
@@ -161,10 +264,9 @@
             padding: 20px;
         }
 
-        /* 🎮 게임별 결과: 2열 그리드(한 줄에 두 칸) 레이아웃 */
         #game-results-list {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 항상 2열 */
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
         }
 
@@ -175,17 +277,15 @@
             padding: 10px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
         }
 
         .game-title {
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             font-weight: 800;
             margin-bottom: 6px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: var(--text);
             border-bottom: 1px solid rgba(255,255,255,0.06);
             padding-bottom: 4px;
         }
@@ -203,8 +303,8 @@
             background: rgba(255, 255, 255, 0.03);
             padding: 4px 6px;
             border-radius: 4px;
-            font-size: 0.8rem;
-            min-width: 0; /* flex 자식 줄임표 활성화 */
+            font-size: 0.78rem;
+            min-width: 0;
         }
 
         .rank-entry-left {
@@ -216,7 +316,6 @@
         }
 
         .team-name-tag {
-            color: var(--text);
             font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
@@ -235,15 +334,15 @@
             flex-shrink: 0;
         }
 
-        /* ================= 📱 모바일 최적화 미디어 쿼리 (768px 이하) ================= */
+        /* 모바일 최적화 */
         @media (max-width: 768px) {
             body {
                 padding: 14px 10px;
             }
 
             h1 {
-                font-size: 1.5rem;
-                margin-bottom: 18px;
+                font-size: 1.4rem;
+                margin-bottom: 16px;
             }
 
             .grid-2 {
@@ -251,72 +350,53 @@
                 gap: 16px;
             }
 
-            .card {
-                padding: 14px 10px;
-            }
-
-            /* 모바일 전용 세로 랭킹 카드 포디움 */
-            .podium-container {
-                flex-direction: column;
-                gap: 10px;
-                align-items: stretch;
+            .podium-wrapper {
+                padding: 20px 10px 14px;
                 margin-bottom: 20px;
             }
 
-            .podium-card {
-                width: 100% !important;
-                height: auto !important;
-                padding: 14px 16px;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                border-radius: 12px;
-            }
-
-            .podium-card.rank-1 {
-                order: 1;
-                border-width: 2px;
-                background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, var(--card-bg) 100%);
-            }
-
-            .podium-card.rank-2 { order: 2; }
-            .podium-card.rank-3 { order: 3; }
-
-            .badge {
-                position: static;
-                transform: none;
-                font-size: 1.8rem;
-                margin-right: 10px;
-            }
-
-            .team-title {
-                margin-top: 0;
-                font-size: 1.15rem;
-                flex: 1;
-                text-align: left;
-            }
-
-            .team-score {
-                margin-top: 0;
-                font-size: 1.4rem;
-            }
-
-            /* 모바일에서도 한 줄에 2개씩 유지하면서 여백 미세 조정 */
-            #game-results-list {
+            .podium-container {
                 gap: 8px;
             }
 
-            .game-item {
-                padding: 8px 6px;
+            .podium-slot.rank-1 .podium-step {
+                height: 135px;
             }
 
-            .game-title {
-                font-size: 0.85rem;
+            .podium-slot.rank-2 .podium-step {
+                height: 100px;
             }
 
-            .rank-entry {
-                padding: 3px 5px;
-                font-size: 0.76rem;
+            .podium-slot.rank-3 .podium-step {
+                height: 75px;
+            }
+
+            .podium-name {
+                font-size: 0.88rem;
+            }
+
+            .podium-score {
+                font-size: 0.82rem;
+            }
+
+            .podium-slot.rank-1 .podium-name {
+                font-size: 1.05rem;
+            }
+
+            .podium-slot.rank-1 .podium-score {
+                font-size: 0.95rem;
+            }
+
+            .podium-number {
+                font-size: 2rem;
+            }
+
+            .podium-slot.rank-1 .podium-number {
+                font-size: 2.6rem;
+            }
+
+            #game-results-list {
+                gap: 8px;
             }
         }
     </style>
@@ -327,8 +407,11 @@
             <h1>🏆 실시간 점수 현황판</h1>
         </header>
 
-        <!-- 상단 TOP 3 -->
-        <div class="podium-container" id="podium-area"></div>
+        <!-- 🏛️ 올림픽 포디움 시상대 섹션 -->
+        <div class="podium-wrapper">
+            <div class="podium-container" id="podium-area"></div>
+            <div class="podium-base"></div>
+        </div>
 
         <div class="grid-2">
             <!-- 전체 순위표 -->
@@ -348,7 +431,7 @@
                 </table>
             </div>
 
-            <!-- 게임별 결과: 한 줄에 2칸씩 아담하게 배치 -->
+            <!-- 게임별 결과 -->
             <div class="card">
                 <h2>🎮 게임별 순위 및 기록</h2>
                 <div id="game-results-list">
@@ -399,20 +482,25 @@
 
             const sortedTeams = [...rawTeams].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
 
-            // 포디움 렌더링
-            const podiumOrder = [
+            // 포디움 렌더링 (2위 - 1위 - 3위 순 배치)
+            const podiumData = [
                 { rank: 2, team: sortedTeams[1], badge: '🥈', cls: 'rank-2' },
                 { rank: 1, team: sortedTeams[0], badge: '🥇', cls: 'rank-1' },
                 { rank: 3, team: sortedTeams[2], badge: '🥉', cls: 'rank-3' }
             ];
 
-            document.getElementById('podium-area').innerHTML = podiumOrder.map(item => `
-                <div class="podium-card ${item.cls}">
-                    <span class="badge">${item.badge}</span>
-                    <div class="team-title">${item.team ? item.team.name : '-'}</div>
-                    <div class="team-score">${item.team ? (Number(item.team.score) || 0).toLocaleString() + 'P' : '0P'}</div>
-                </div>
-            `).join('');
+            document.getElementById('podium-area').innerHTML = podiumData.map(item => `
+                    <div class="podium-slot ${item.cls}">
+                        <div class="podium-athlete">
+                            <div class="podium-badge">${item.badge}</div>
+                            <div class="podium-name">${item.team ? item.team.name : '-'}</div>
+                            <div class="podium-score">${item.team ? (Number(item.team.score) || 0).toLocaleString() + 'P' : '0P'}</div>
+                        </div>
+                        <div class="podium-step">
+                            <span class="podium-number">${item.rank}</span>
+                        </div>
+                    </div>
+                `).join('');
 
             // 순위표 렌더링
             const leaderboardBody = document.getElementById('leaderboard-tbody');
@@ -420,15 +508,15 @@
                 leaderboardBody.innerHTML = '<tr><td colspan="3" class="empty-state">팀 정보가 없습니다.</td></tr>';
             } else {
                 leaderboardBody.innerHTML = sortedTeams.map((team, idx) => `
-                    <tr>
-                        <td><strong>${idx + 1}위</strong></td>
-                        <td>${team.name || '미등록'}</td>
-                        <td style="text-align: right; color: var(--gold); font-weight: 800;">${(Number(team.score) || 0).toLocaleString()} P</td>
-                    </tr>
-                `).join('');
+                        <tr>
+                            <td><strong>${idx + 1}위</strong></td>
+                            <td>${team.name || '미등록'}</td>
+                            <td style="text-align: right; color: var(--gold); font-weight: 800;">${(Number(team.score) || 0).toLocaleString()} P</td>
+                        </tr>
+                    `).join('');
             }
 
-            // 게임별 순위 및 기록 렌더링 (2칸 그리드 적용)
+            // 게임별 순위 및 기록 렌더링
             const gameResultsList = document.getElementById('game-results-list');
             if (games.length === 0) {
                 gameResultsList.innerHTML = '<div class="empty-state" style="grid-column: span 2;">등록된 게임 결과가 없습니다.</div>';
@@ -442,26 +530,26 @@
                     const formatEntry = (medal, team, record) => {
                         const hasRecord = record && String(record).trim();
                         return `
-                            <div class="rank-entry">
-                                <div class="rank-entry-left">
-                                    <span>${medal}</span>
-                                    <span class="team-name-tag">${team ? team.name : '-'}</span>
+                                <div class="rank-entry">
+                                    <div class="rank-entry-left">
+                                        <span>${medal}</span>
+                                        <span class="team-name-tag">${team ? team.name : '-'}</span>
+                                    </div>
+                                    ${hasRecord ? `<span class="record-tag">${record}</span>` : ''}
                                 </div>
-                                ${hasRecord ? `<span class="record-tag">${record}</span>` : ''}
-                            </div>
-                        `;
+                            `;
                     };
 
                     return `
-                        <div class="game-item">
-                            <div class="game-title">🎮 ${g.name || '게임'}</div>
-                            <div class="game-ranks-row">
-                                ${formatEntry('🥇', t1, g.record1)}
-                                ${formatEntry('🥈', t2, g.record2)}
-                                ${formatEntry('🥉', t3, g.record3)}
+                            <div class="game-item">
+                                <div class="game-title">🎮 ${g.name || '게임'}</div>
+                                <div class="game-ranks-row">
+                                    ${formatEntry('🥇', t1, g.record1)}
+                                    ${formatEntry('🥈', t2, g.record2)}
+                                    ${formatEntry('🥉', t3, g.record3)}
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                 }).join('');
             }
         }
