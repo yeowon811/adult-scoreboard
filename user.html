@@ -74,24 +74,24 @@
             justify-content: center;
         }
 
-            .podium-card.rank-1 {
-                height: 250px;
-                border-color: var(--gold);
-                background: linear-gradient(180deg, rgba(245, 158, 11, 0.15) 0%, var(--card-bg) 100%);
-                order: 2;
-            }
+        .podium-card.rank-1 {
+            height: 250px;
+            border-color: var(--gold);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.15) 0%, var(--card-bg) 100%);
+            order: 2;
+        }
 
-            .podium-card.rank-2 {
-                height: 210px;
-                border-color: var(--silver);
-                order: 1;
-            }
+        .podium-card.rank-2 {
+            height: 210px;
+            border-color: var(--silver);
+            order: 1;
+        }
 
-            .podium-card.rank-3 {
-                height: 190px;
-                border-color: var(--bronze);
-                order: 3;
-            }
+        .podium-card.rank-3 {
+            height: 190px;
+            border-color: var(--bronze);
+            order: 3;
+        }
 
         .badge {
             font-size: 2.2rem;
@@ -129,15 +129,15 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-            .card h2 {
-                font-size: 1.2rem;
-                margin-bottom: 14px;
-                border-bottom: 1px solid var(--card-border);
-                padding-bottom: 8px;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
         table {
             width: 100%;
@@ -273,19 +273,14 @@
                 border-radius: 12px;
             }
 
-                .podium-card.rank-1 {
-                    order: 1;
-                    border-width: 2px;
-                    background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, var(--card-bg) 100%);
-                }
+            .podium-card.rank-1 {
+                order: 1;
+                border-width: 2px;
+                background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, var(--card-bg) 100%);
+            }
 
-                .podium-card.rank-2 {
-                    order: 2;
-                }
-
-                .podium-card.rank-3 {
-                    order: 3;
-                }
+            .podium-card.rank-2 { order: 2; }
+            .podium-card.rank-3 { order: 3; }
 
             .badge {
                 position: static;
@@ -412,12 +407,12 @@
             ];
 
             document.getElementById('podium-area').innerHTML = podiumOrder.map(item => `
-                    <div class="podium-card ${item.cls}">
-                        <span class="badge">${item.badge}</span>
-                        <div class="team-title">${item.team ? item.team.name : '-'}</div>
-                        <div class="team-score">${item.team ? (Number(item.team.score) || 0).toLocaleString() + 'P' : '0P'}</div>
-                    </div>
-                `).join('');
+                <div class="podium-card ${item.cls}">
+                    <span class="badge">${item.badge}</span>
+                    <div class="team-title">${item.team ? item.team.name : '-'}</div>
+                    <div class="team-score">${item.team ? (Number(item.team.score) || 0).toLocaleString() + 'P' : '0P'}</div>
+                </div>
+            `).join('');
 
             // 순위표 렌더링
             const leaderboardBody = document.getElementById('leaderboard-tbody');
@@ -425,12 +420,12 @@
                 leaderboardBody.innerHTML = '<tr><td colspan="3" class="empty-state">팀 정보가 없습니다.</td></tr>';
             } else {
                 leaderboardBody.innerHTML = sortedTeams.map((team, idx) => `
-                        <tr>
-                            <td><strong>${idx + 1}위</strong></td>
-                            <td>${team.name || '미등록'}</td>
-                            <td style="text-align: right; color: var(--gold); font-weight: 800;">${(Number(team.score) || 0).toLocaleString()} P</td>
-                        </tr>
-                    `).join('');
+                    <tr>
+                        <td><strong>${idx + 1}위</strong></td>
+                        <td>${team.name || '미등록'}</td>
+                        <td style="text-align: right; color: var(--gold); font-weight: 800;">${(Number(team.score) || 0).toLocaleString()} P</td>
+                    </tr>
+                `).join('');
             }
 
             // 게임별 순위 및 기록 렌더링 (2칸 그리드 적용)
@@ -447,26 +442,26 @@
                     const formatEntry = (medal, team, record) => {
                         const hasRecord = record && String(record).trim();
                         return `
-                                <div class="rank-entry">
-                                    <div class="rank-entry-left">
-                                        <span>${medal}</span>
-                                        <span class="team-name-tag">${team ? team.name : '-'}</span>
-                                    </div>
-                                    ${hasRecord ? `<span class="record-tag">${record}</span>` : ''}
+                            <div class="rank-entry">
+                                <div class="rank-entry-left">
+                                    <span>${medal}</span>
+                                    <span class="team-name-tag">${team ? team.name : '-'}</span>
                                 </div>
-                            `;
+                                ${hasRecord ? `<span class="record-tag">${record}</span>` : ''}
+                            </div>
+                        `;
                     };
 
                     return `
-                            <div class="game-item">
-                                <div class="game-title">🎮 ${g.name || '게임'}</div>
-                                <div class="game-ranks-row">
-                                    ${formatEntry('🥇', t1, g.record1)}
-                                    ${formatEntry('🥈', t2, g.record2)}
-                                    ${formatEntry('🥉', t3, g.record3)}
-                                </div>
+                        <div class="game-item">
+                            <div class="game-title">🎮 ${g.name || '게임'}</div>
+                            <div class="game-ranks-row">
+                                ${formatEntry('🥇', t1, g.record1)}
+                                ${formatEntry('🥈', t2, g.record2)}
+                                ${formatEntry('🥉', t3, g.record3)}
                             </div>
-                        `;
+                        </div>
+                    `;
                 }).join('');
             }
         }
