@@ -1,383 +1,482 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 제어 센터</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <style>
-    :root {
-      --primary: #4f46e5; --primary-hover: #4338ca;
-      --bg: #0b0f19; --card-bg: #1e293b; --card-border: #334155;
-      --text: #f8fafc; --text-muted: #94a3b8;
-      --danger: #ef4444; --success: #10b981; --gold: #f59e0b;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-    .container { max-width: 1300px; margin: 0 auto; }
-    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
-    .btn { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
-    .btn:hover { opacity: 0.9; }
-    .btn-danger { background: var(--danger); }
-    .btn-success { background: var(--success); }
-    .btn-undo { background: #64748b; }
-    input, select { background: #0f172a; border: 1px solid var(--card-border); color: var(--text); padding: 8px 10px; border-radius: 6px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px; border-bottom: 1px solid var(--card-border); text-align: left; }
-    #admin-lock { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; }
-    .badge-done { background: #065f46; color: #34d399; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; }
-    .badge-wait { background: #78350f; color: #fbbf24; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 제어 센터</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #0b0f19;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --gold: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+            .btn:hover {
+                opacity: 0.9;
+            }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-undo {
+            background: #64748b;
+        }
+
+        input, select {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid var(--card-border);
+            text-align: left;
+        }
+
+        #admin-lock {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .badge-done {
+            background: #065f46;
+            color: #34d399;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .badge-wait {
+            background: #78350f;
+            color: #fbbf24;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
 
-<!-- 비밀번호 잠금 화면 -->
-<div id="admin-lock">
-  <div class="card" style="text-align: center; width: 320px;">
-    <h2 style="margin-bottom: 15px;">🔒 관리자 인증</h2>
-    <input type="password" id="pin-input" placeholder="비밀번호 입력 (기본: 1234)" style="width: 100%; margin-bottom: 10px;" onkeydown="if(event.key==='Enter') unlockAdmin()">
-    <button class="btn" style="width: 100%;" onclick="unlockAdmin()">입장하기</button>
-  </div>
-</div>
-
-<div class="container">
-  <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-    <h2>⚙️ 스코어보드 관리자 콘솔</h2>
-    <div>
-      <button class="btn btn-undo" onclick="undoState()">↩ 되돌리기 (Undo)</button>
-      <button class="btn btn-danger" onclick="resetData()">데이터 전체 리셋</button>
-    </div>
-  </header>
-
-  <!-- 상단 실시간 모니터링 축약 뷰 -->
-  <div class="card" style="border-color: var(--primary);">
-    <h3>📊 실시간 현황 모니터링 (사용자 화면 동기화 중)</h3>
-    <div id="live-ranking-bar" style="margin-top: 10px; font-weight: 600; color: var(--gold); line-height: 1.6;">-</div>
-  </div>
-
-  <!-- 점수 배점 설정 -->
-  <div class="card">
-    <h3>등수별 기본 획득 점수 규칙</h3>
-    <div style="display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
-      <label>🥇 1등: <input type="number" id="rule-p1" style="width: 80px;"></label>
-      <label>🥈 2등: <input type="number" id="rule-p2" style="width: 80px;"></label>
-      <label>🥉 3등: <input type="number" id="rule-p3" style="width: 80px;"></label>
-      <button class="btn" onclick="saveRules()">규칙 저장</button>
-    </div>
-  </div>
-
-  <!-- 게임별 순위 선정 및 일괄 합산 -->
-  <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-      <div>
-        <h3>게임별 순위 선정 및 일괄 합산</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">* 이미 합산된 게임은 중복 합산되지 않습니다.</p>
-      </div>
-      <button class="btn btn-success" onclick="batchCalculateScores()">⚡ 미반영 게임 점수 일괄합산</button>
-    </div>
-    <div id="game-selection-list" style="margin-top: 12px;"></div>
-  </div>
-
-  <!-- 추가/감점 즉시 반영 -->
-  <div class="card">
-    <h3>추가 점수 / 감점 부여</h3>
-    <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
-      <select id="quick-team"></select>
-      <input type="number" id="quick-pts" placeholder="점수 (+50 또는 -30)">
-      <button class="btn" onclick="applyQuickScore()">점수 즉시 반영</button>
-    </div>
-  </div>
-
-  <!-- 조 및 게임 관리 그리드 -->
-  <div class="grid-2">
-    <div class="card">
-      <h3>조(팀) 관리</h3>
-      <div style="display: flex; gap: 6px; margin: 10px 0;">
-        <input type="text" id="new-team-name" placeholder="신규 팀명" style="flex: 1;" onkeydown="if(event.key==='Enter') addTeam()">
-        <button class="btn" onclick="addTeam()">추가</button>
-      </div>
-      <table id="team-table"><tbody></tbody></table>
-    </div>
-
-    <div class="card">
-      <h3>게임 관리</h3>
-      <div style="display: flex; gap: 6px; margin: 10px 0;">
-        <input type="text" id="new-game-name" placeholder="신규 게임명" style="flex: 1;" onkeydown="if(event.key==='Enter') addGame()">
-        <button class="btn" onclick="addGame()">추가</button>
-      </div>
-      <table id="game-table"><tbody></tbody></table>
-    </div>
-  </div>
-</div>
-
-<script>
-  // 1. Firebase 설정
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdW4Nu4mCgOoF2152ZImcgb-v6wp-hiiI",
-    authDomain: "adult-scoreboard.firebaseapp.com",
-    databaseURL: "https://adult-scoreboard-default-rtdb.firebaseio.com",
-    projectId: "adult-scoreboard",
-    storageBucket: "adult-scoreboard.firebasestorage.app",
-    messagingSenderId: "941156687343",
-    appId: "1:941156687343:web:31c344c0110c59d62d2a1a",
-    measurementId: "G-NGBSSPGHDG"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  const defaultState = {
-    rules: { p1: 100, p2: 70, p3: 40 },
-    teams: [
-      { id: 1, name: "1조", score: 0 },
-      { id: 2, name: "2조", score: 0 },
-      { id: 3, name: "3조", score: 0 },
-      { id: 4, name: "4조", score: 0 }
-    ],
-    games: [
-      { id: 1, name: "줄다리기", rank1: null, rank2: null, rank3: null, calculated: false }
-    ]
-  };
-
-  let currentState = null;
-  let backupState = null;
-
-  function toArray(data) {
-    if (!data) return [];
-    return Array.isArray(data) ? data : Object.values(data);
-  }
-
-  function unlockAdmin() {
-    if (document.getElementById('pin-input').value === '1234') {
-      document.getElementById('admin-lock').style.display = 'none';
-    } else {
-      alert("비밀번호가 올바르지 않습니다.");
-    }
-  }
-
-  // 실시간 구독
-  db.ref('scoreboard').on('value', (snapshot) => {
-    const val = snapshot.val();
-    if (!val) {
-      db.ref('scoreboard').set(defaultState);
-      return;
-    }
-    // 객체로 저장되었을 경우를 대비해 배열 정규화
-    currentState = {
-      rules: val.rules || { p1: 100, p2: 70, p3: 40 },
-      teams: toArray(val.teams),
-      games: toArray(val.games)
-    };
-    renderAdmin();
-  });
-
-  function updateDB(createUndo = false) {
-    if (createUndo && currentState) {
-      backupState = JSON.parse(JSON.stringify(currentState));
-    }
-    db.ref('scoreboard').set(currentState);
-  }
-
-  function undoState() {
-    if (!backupState) return alert("되돌릴 이전 작업 내역이 없습니다.");
-    currentState = JSON.parse(JSON.stringify(backupState));
-    backupState = null;
-    db.ref('scoreboard').set(currentState);
-    alert("이전 상태로 되돌렸습니다.");
-  }
-
-  function renderAdmin() {
-    if (!currentState) return;
-    const teams = currentState.teams || [];
-    const games = currentState.games || [];
-
-    // 1. 실시간 모니터링 바
-    const sorted = [...teams].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
-    document.getElementById('live-ranking-bar').innerHTML = sorted.length > 0 
-      ? sorted.map((t, idx) => `${idx + 1}위: <strong>${t.name}</strong> (${(Number(t.score) || 0).toLocaleString()}P)`).join(' | ')
-      : '등록된 팀이 없습니다.';
-
-    // 2. 점수 규칙 인풋 세팅
-    document.getElementById('rule-p1').value = currentState.rules.p1;
-    document.getElementById('rule-p2').value = currentState.rules.p2;
-    document.getElementById('rule-p3').value = currentState.rules.p3;
-
-    // 3. 즉시 점수 부여 팀 드롭다운
-    const quickSelect = document.getElementById('quick-team');
-    quickSelect.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-
-    // 4. 팀 관리 테이블
-    document.querySelector('#team-table tbody').innerHTML = teams.map(t => `
-      <tr>
-        <td><input type="text" value="${t.name}" onchange="editTeamName('${t.id}', this.value)" style="width: 90%;"></td>
-        <td style="font-weight: bold; color: var(--gold);">${(Number(t.score) || 0).toLocaleString()} P</td>
-        <td><button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button></td>
-      </tr>
-    `).join('');
-
-    // 5. 게임 관리 테이블
-    document.querySelector('#game-table tbody').innerHTML = games.map(g => `
-      <tr>
-        <td><input type="text" value="${g.name}" onchange="editGameName('${g.id}', this.value)" style="width: 90%;"></td>
-        <td><button class="btn btn-danger" onclick="deleteGame('${g.id}')">삭제</button></td>
-      </tr>
-    `).join('');
-
-    // 6. 게임별 순위 드롭다운 렌더링
-    const buildOptions = (selectedId) => {
-      let opts = `<option value="">--선택 안됨--</option>`;
-      teams.forEach(t => {
-        const isSelected = String(t.id) === String(selectedId) ? 'selected' : '';
-        opts += `<option value="${t.id}" ${isSelected}>${t.name}</option>`;
-      });
-      return opts;
-    };
-
-    document.getElementById('game-selection-list').innerHTML = games.map(g => {
-      const isDone = g.calculated;
-      return `
-        <div style="border: 1px solid var(--card-border); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <strong>🎮 ${g.name}</strong>
-            ${isDone ? '<span class="badge-done">점수 반영 완료</span>' : '<span class="badge-wait">점수 미반영</span>'}
-          </div>
-          <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
-            <label>🥇 1위: <select onchange="setGameRank('${g.id}', 'rank1', this.value)">${buildOptions(g.rank1)}</select></label>
-            <label>🥈 2위: <select onchange="setGameRank('${g.id}', 'rank2', this.value)">${buildOptions(g.rank2)}</select></label>
-            <label>🥉 3위: <select onchange="setGameRank('${g.id}', 'rank3', this.value)">${buildOptions(g.rank3)}</select></label>
-          </div>
+    <!-- 비밀번호 잠금 화면 -->
+    <div id="admin-lock">
+        <div class="card" style="text-align: center; width: 320px;">
+            <h2 style="margin-bottom: 15px;">🔒 관리자 인증</h2>
+            <input type="password" id="pin-input" placeholder="비밀번호 입력 (기본: 1234)" style="width: 100%; margin-bottom: 10px;" onkeydown="if(event.key==='Enter') unlockAdmin()">
+            <button class="btn" style="width: 100%;" onclick="unlockAdmin()">입장하기</button>
         </div>
-      `;
-    }).join('');
-  }
+    </div>
 
-  /* 관리 액션 로직 */
-  function saveRules() {
-    currentState.rules = {
-      p1: Number(document.getElementById('rule-p1').value) || 0,
-      p2: Number(document.getElementById('rule-p2').value) || 0,
-      p3: Number(document.getElementById('rule-p3').value) || 0
-    };
-    updateDB();
-    alert("점수 규칙이 저장되었습니다.");
-  }
+    <div class="container">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <h2>⚙️ 스코어보드 관리자 콘솔</h2>
+            <div>
+                <button class="btn btn-undo" onclick="undoState()">↩ 되돌리기 (Undo)</button>
+                <button class="btn btn-danger" onclick="resetData()">데이터 전체 리셋</button>
+            </div>
+        </header>
 
-  function setGameRank(gameId, rankKey, value) {
-    const g = currentState.games.find(item => String(item.id) === String(gameId));
-    if (g) {
-      g[rankKey] = value ? value : null;
-      // 순위가 바뀌었으므로 재계산이 필요할 수 있음을 명시
-      g.calculated = false;
-      updateDB();
-    }
-  }
+        <!-- 상단 실시간 모니터링 축약 뷰 -->
+        <div class="card" style="border-color: var(--primary);">
+            <h3>📊 실시간 현황 모니터링 (사용자 화면 동기화 중)</h3>
+            <div id="live-ranking-bar" style="margin-top: 10px; font-weight: 600; color: var(--gold); line-height: 1.6;">-</div>
+        </div>
 
-  function batchCalculateScores() {
-    const uncalculated = currentState.games.filter(g => !g.calculated && (g.rank1 || g.rank2 || g.rank3));
-    if (uncalculated.length === 0) {
-      return alert("새롭게 합산할 미반영 게임 결과가 없습니다.");
-    }
+        <!-- 점수 배점 설정 -->
+        <div class="card">
+            <h3>등수별 기본 획득 점수 규칙</h3>
+            <div style="display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+                <label>🥇 1등: <input type="number" id="rule-p1" style="width: 80px;"></label>
+                <label>🥈 2등: <input type="number" id="rule-p2" style="width: 80px;"></label>
+                <label>🥉 3등: <input type="number" id="rule-p3" style="width: 80px;"></label>
+                <button class="btn" onclick="saveRules()">규칙 저장</button>
+            </div>
+        </div>
 
-    if (!confirm(`총 ${uncalculated.length}개의 미반영 게임 결과를 점수에 합산하시겠습니까?`)) return;
-    updateDB(true);
+        <!-- 게임별 순위 선정 및 일괄 합산 -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3>게임별 순위 선정 및 일괄 합산</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">* 이미 합산된 게임은 중복 합산되지 않습니다.</p>
+                </div>
+                <button class="btn btn-success" onclick="batchCalculateScores()">⚡ 미반영 게임 점수 일괄합산</button>
+            </div>
+            <div id="game-selection-list" style="margin-top: 12px;"></div>
+        </div>
 
-    const rules = currentState.rules;
-    uncalculated.forEach(g => {
-      const applyRankScore = (rankId, pts) => {
-        if (!rankId) return;
-        const t = currentState.teams.find(x => String(x.id) === String(rankId));
-        if (t) t.score = (Number(t.score) || 0) + pts;
-      };
+        <!-- 추가/감점 즉시 반영 -->
+        <div class="card">
+            <h3>추가 점수 / 감점 부여</h3>
+            <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+                <select id="quick-team"></select>
+                <input type="number" id="quick-pts" placeholder="점수 (+50 또는 -30)">
+                <button class="btn" onclick="applyQuickScore()">점수 즉시 반영</button>
+            </div>
+        </div>
 
-      applyRankScore(g.rank1, rules.p1);
-      applyRankScore(g.rank2, rules.p2);
-      applyRankScore(g.rank3, rules.p3);
-      g.calculated = true;
-    });
+        <!-- 조 및 게임 관리 그리드 -->
+        <div class="grid-2">
+            <div class="card">
+                <h3>조(팀) 관리</h3>
+                <div style="display: flex; gap: 6px; margin: 10px 0;">
+                    <input type="text" id="new-team-name" placeholder="신규 팀명" style="flex: 1;" onkeydown="if(event.key==='Enter') addTeam()">
+                    <button class="btn" onclick="addTeam()">추가</button>
+                </div>
+                <table id="team-table"><tbody></tbody></table>
+            </div>
 
-    updateDB();
-    alert("일괄 점수 합산이 완료되었습니다.");
-  }
+            <div class="card">
+                <h3>게임 관리</h3>
+                <div style="display: flex; gap: 6px; margin: 10px 0;">
+                    <input type="text" id="new-game-name" placeholder="신규 게임명" style="flex: 1;" onkeydown="if(event.key==='Enter') addGame()">
+                    <button class="btn" onclick="addGame()">추가</button>
+                </div>
+                <table id="game-table"><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
 
-  function applyQuickScore() {
-    const tid = document.getElementById('quick-team').value;
-    const pts = Number(document.getElementById('quick-pts').value);
-    if (!tid) return alert("팀을 먼저 등록하거나 선택하세요.");
-    if (isNaN(pts) || pts === 0) return alert("유효한 점수를 입력하세요.");
+    <script>
+        // 1. Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdW4Nu4mCgOoF2152ZImcgb-v6wp-hiiI",
+            authDomain: "adult-scoreboard.firebaseapp.com",
+            databaseURL: "https://adult-scoreboard-default-rtdb.firebaseio.com",
+            projectId: "adult-scoreboard",
+            storageBucket: "adult-scoreboard.firebasestorage.app",
+            messagingSenderId: "941156687343",
+            appId: "1:941156687343:web:31c344c0110c59d62d2a1a",
+            measurementId: "G-NGBSSPGHDG"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    updateDB(true);
-    const t = currentState.teams.find(x => String(x.id) === String(tid));
-    if (t) {
-      t.score = (Number(t.score) || 0) + pts;
-      document.getElementById('quick-pts').value = '';
-      updateDB();
-      alert(`${t.name}에 ${pts}점이 반영되었습니다.`);
-    }
-  }
+        const defaultState = {
+            rules: { p1: 100, p2: 70, p3: 40 },
+            teams: [
+                { id: 1, name: "1조", score: 0 },
+                { id: 2, name: "2조", score: 0 },
+                { id: 3, name: "3조", score: 0 },
+                { id: 4, name: "4조", score: 0 }
+            ],
+            games: [
+                { id: 1, name: "줄다리기", rank1: null, rank2: null, rank3: null, calculated: false }
+            ]
+        };
 
-  function addTeam() {
-    const input = document.getElementById('new-team-name');
-    const val = input.value.trim();
-    if (!val) return;
-    currentState.teams.push({ id: String(Date.now()), name: val, score: 0 });
-    input.value = '';
-    updateDB();
-  }
+        let currentState = null;
+        let backupState = null;
 
-  function editTeamName(id, name) {
-    const t = currentState.teams.find(x => String(x.id) === String(id));
-    if (t) { 
-      t.name = name.trim(); 
-      updateDB(); 
-    }
-  }
+        function toArray(data) {
+            if (!data) return [];
+            return Array.isArray(data) ? data : Object.values(data);
+        }
 
-  function deleteTeam(id) {
-    if (!confirm("해당 팀을 삭제하시겠습니까?")) return;
-    updateDB(true);
-    currentState.teams = currentState.teams.filter(x => String(x.id) !== String(id));
-    updateDB();
-  }
+        function unlockAdmin() {
+            if (document.getElementById('pin-input').value === '1234') {
+                document.getElementById('admin-lock').style.display = 'none';
+            } else {
+                alert("비밀번호가 올바르지 않습니다.");
+            }
+        }
 
-  function addGame() {
-    const input = document.getElementById('new-game-name');
-    const val = input.value.trim();
-    if (!val) return;
-    currentState.games.push({ 
-      id: String(Date.now()), 
-      name: val, 
-      rank1: null, 
-      rank2: null, 
-      rank3: null, 
-      calculated: false 
-    });
-    input.value = '';
-    updateDB();
-  }
+        // 실시간 구독
+        db.ref('scoreboard').on('value', (snapshot) => {
+            const val = snapshot.val();
+            if (!val) {
+                db.ref('scoreboard').set(defaultState);
+                return;
+            }
+            // 객체로 저장되었을 경우를 대비해 배열 정규화
+            currentState = {
+                rules: val.rules || { p1: 100, p2: 70, p3: 40 },
+                teams: toArray(val.teams),
+                games: toArray(val.games)
+            };
+            renderAdmin();
+        });
 
-  function editGameName(id, name) {
-    const g = currentState.games.find(x => String(x.id) === String(id));
-    if (g) { 
-      g.name = name.trim(); 
-      updateDB(); 
-    }
-  }
+        function updateDB(createUndo = false) {
+            if (createUndo && currentState) {
+                backupState = JSON.parse(JSON.stringify(currentState));
+            }
+            db.ref('scoreboard').set(currentState);
+        }
 
-  function deleteGame(id) {
-    if (!confirm("해당 게임을 삭제하시겠습니까?")) return;
-    updateDB(true);
-    currentState.games = currentState.games.filter(x => String(x.id) !== String(id));
-    updateDB();
-  }
+        function undoState() {
+            if (!backupState) return alert("되돌릴 이전 작업 내역이 없습니다.");
+            currentState = JSON.parse(JSON.stringify(backupState));
+            backupState = null;
+            db.ref('scoreboard').set(currentState);
+            alert("이전 상태로 되돌렸습니다.");
+        }
 
-  function resetData() {
-    if (!confirm("정말 모든 데이터를 기본값으로 초기화하시겠습니까? 이 작업은 이전 상태로 되돌릴 수 있습니다.")) return;
-    updateDB(true);
-    currentState = JSON.parse(JSON.stringify(defaultState));
-    updateDB();
-  }
-</script>
+        function renderAdmin() {
+            if (!currentState) return;
+            const teams = currentState.teams || [];
+            const games = currentState.games || [];
+
+            // 1. 실시간 모니터링 바
+            const sorted = [...teams].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+            document.getElementById('live-ranking-bar').innerHTML = sorted.length > 0
+                ? sorted.map((t, idx) => `${idx + 1}위: <strong>${t.name}</strong> (${(Number(t.score) || 0).toLocaleString()}P)`).join(' | ')
+                : '등록된 팀이 없습니다.';
+
+            // 2. 점수 규칙 인풋 세팅
+            document.getElementById('rule-p1').value = currentState.rules.p1;
+            document.getElementById('rule-p2').value = currentState.rules.p2;
+            document.getElementById('rule-p3').value = currentState.rules.p3;
+
+            // 3. 즉시 점수 부여 팀 드롭다운
+            const quickSelect = document.getElementById('quick-team');
+            quickSelect.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+            // 4. 팀 관리 테이블
+            document.querySelector('#team-table tbody').innerHTML = teams.map(t => `
+          <tr>
+            <td><input type="text" value="${t.name}" onchange="editTeamName('${t.id}', this.value)" style="width: 90%;"></td>
+            <td style="font-weight: bold; color: var(--gold);">${(Number(t.score) || 0).toLocaleString()} P</td>
+            <td><button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button></td>
+          </tr>
+        `).join('');
+
+            // 5. 게임 관리 테이블
+            document.querySelector('#game-table tbody').innerHTML = games.map(g => `
+          <tr>
+            <td><input type="text" value="${g.name}" onchange="editGameName('${g.id}', this.value)" style="width: 90%;"></td>
+            <td><button class="btn btn-danger" onclick="deleteGame('${g.id}')">삭제</button></td>
+          </tr>
+        `).join('');
+
+            // 6. 게임별 순위 드롭다운 렌더링
+            const buildOptions = (selectedId) => {
+                let opts = `<option value="">--선택 안됨--</option>`;
+                teams.forEach(t => {
+                    const isSelected = String(t.id) === String(selectedId) ? 'selected' : '';
+                    opts += `<option value="${t.id}" ${isSelected}>${t.name}</option>`;
+                });
+                return opts;
+            };
+
+            document.getElementById('game-selection-list').innerHTML = games.map(g => {
+                const isDone = g.calculated;
+                return `
+            <div style="border: 1px solid var(--card-border); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong>🎮 ${g.name}</strong>
+                ${isDone ? '<span class="badge-done">점수 반영 완료</span>' : '<span class="badge-wait">점수 미반영</span>'}
+              </div>
+              <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <label>🥇 1위: <select onchange="setGameRank('${g.id}', 'rank1', this.value)">${buildOptions(g.rank1)}</select></label>
+                <label>🥈 2위: <select onchange="setGameRank('${g.id}', 'rank2', this.value)">${buildOptions(g.rank2)}</select></label>
+                <label>🥉 3위: <select onchange="setGameRank('${g.id}', 'rank3', this.value)">${buildOptions(g.rank3)}</select></label>
+              </div>
+            </div>
+          `;
+            }).join('');
+        }
+
+        /* 관리 액션 로직 */
+        function saveRules() {
+            currentState.rules = {
+                p1: Number(document.getElementById('rule-p1').value) || 0,
+                p2: Number(document.getElementById('rule-p2').value) || 0,
+                p3: Number(document.getElementById('rule-p3').value) || 0
+            };
+            updateDB();
+            alert("점수 규칙이 저장되었습니다.");
+        }
+
+        function setGameRank(gameId, rankKey, value) {
+            const g = currentState.games.find(item => String(item.id) === String(gameId));
+            if (g) {
+                g[rankKey] = value ? value : null;
+                // 순위가 바뀌었으므로 재계산이 필요할 수 있음을 명시
+                g.calculated = false;
+                updateDB();
+            }
+        }
+
+        function batchCalculateScores() {
+            const uncalculated = currentState.games.filter(g => !g.calculated && (g.rank1 || g.rank2 || g.rank3));
+            if (uncalculated.length === 0) {
+                return alert("새롭게 합산할 미반영 게임 결과가 없습니다.");
+            }
+
+            if (!confirm(`총 ${uncalculated.length}개의 미반영 게임 결과를 점수에 합산하시겠습니까?`)) return;
+            updateDB(true);
+
+            const rules = currentState.rules;
+            uncalculated.forEach(g => {
+                const applyRankScore = (rankId, pts) => {
+                    if (!rankId) return;
+                    const t = currentState.teams.find(x => String(x.id) === String(rankId));
+                    if (t) t.score = (Number(t.score) || 0) + pts;
+                };
+
+                applyRankScore(g.rank1, rules.p1);
+                applyRankScore(g.rank2, rules.p2);
+                applyRankScore(g.rank3, rules.p3);
+                g.calculated = true;
+            });
+
+            updateDB();
+            alert("일괄 점수 합산이 완료되었습니다.");
+        }
+
+        function applyQuickScore() {
+            const tid = document.getElementById('quick-team').value;
+            const pts = Number(document.getElementById('quick-pts').value);
+            if (!tid) return alert("팀을 먼저 등록하거나 선택하세요.");
+            if (isNaN(pts) || pts === 0) return alert("유효한 점수를 입력하세요.");
+
+            updateDB(true);
+            const t = currentState.teams.find(x => String(x.id) === String(tid));
+            if (t) {
+                t.score = (Number(t.score) || 0) + pts;
+                document.getElementById('quick-pts').value = '';
+                updateDB();
+                alert(`${t.name}에 ${pts}점이 반영되었습니다.`);
+            }
+        }
+
+        function addTeam() {
+            const input = document.getElementById('new-team-name');
+            const val = input.value.trim();
+            if (!val) return;
+            currentState.teams.push({ id: String(Date.now()), name: val, score: 0 });
+            input.value = '';
+            updateDB();
+        }
+
+        function editTeamName(id, name) {
+            const t = currentState.teams.find(x => String(x.id) === String(id));
+            if (t) {
+                t.name = name.trim();
+                updateDB();
+            }
+        }
+
+        function deleteTeam(id) {
+            if (!confirm("해당 팀을 삭제하시겠습니까?")) return;
+            updateDB(true);
+            currentState.teams = currentState.teams.filter(x => String(x.id) !== String(id));
+            updateDB();
+        }
+
+        function addGame() {
+            const input = document.getElementById('new-game-name');
+            const val = input.value.trim();
+            if (!val) return;
+            currentState.games.push({
+                id: String(Date.now()),
+                name: val,
+                rank1: null,
+                rank2: null,
+                rank3: null,
+                calculated: false
+            });
+            input.value = '';
+            updateDB();
+        }
+
+        function editGameName(id, name) {
+            const g = currentState.games.find(x => String(x.id) === String(id));
+            if (g) {
+                g.name = name.trim();
+                updateDB();
+            }
+        }
+
+        function deleteGame(id) {
+            if (!confirm("해당 게임을 삭제하시겠습니까?")) return;
+            updateDB(true);
+            currentState.games = currentState.games.filter(x => String(x.id) !== String(id));
+            updateDB();
+        }
+
+        function resetData() {
+            if (!confirm("정말 모든 데이터를 기본값으로 초기화하시겠습니까? 이 작업은 이전 상태로 되돌릴 수 있습니다.")) return;
+            updateDB(true);
+            currentState = JSON.parse(JSON.stringify(defaultState));
+            updateDB();
+        }
+    </script>
 </body>
 </html>
