@@ -28,7 +28,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
+            background-color: var(--bg);
             color: var(--text);
             padding: 20px;
         }
@@ -129,6 +129,17 @@
             padding: 2px 8px;
             border-radius: 4px;
         }
+
+        /* 게임별 순위 및 기록 입력 레이아웃 */
+        .rank-record-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+        }
     </style>
 </head>
 <body>
@@ -172,8 +183,8 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <h3>게임별 순위 선정 및 일괄 합산</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">* 이미 합산된 게임은 중복 합산되지 않습니다.</p>
+                    <h3>게임별 순위 및 기록 관리 (일괄 합산)</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">* 팀 선택과 기록(초, 점수 등)은 입력 즉시 사용자 화면에 동기화됩니다. 이미 점수가 합산된 게임은 중복 합산되지 않습니다.</p>
                 </div>
                 <button class="btn btn-success" onclick="batchCalculateScores()">⚡ 미반영 게임 점수 일괄합산</button>
             </div>
@@ -236,7 +247,7 @@
                 { id: 4, name: "4조", score: 0 }
             ],
             games: [
-                { id: 1, name: "줄다리기", rank1: null, rank2: null, rank3: null, calculated: false }
+                { id: 1, name: "줄다리기", rank1: null, rank2: null, rank3: null, record1: "", record2: "", record3: "", calculated: false }
             ]
         };
 
@@ -263,7 +274,6 @@
                 db.ref('scoreboard').set(defaultState);
                 return;
             }
-            // 객체로 저장되었을 경우를 대비해 배열 정규화
             currentState = {
                 rules: val.rules || { p1: 100, p2: 70, p3: 40 },
                 teams: toArray(val.teams),
@@ -298,33 +308,33 @@
                 ? sorted.map((t, idx) => `${idx + 1}위: <strong>${t.name}</strong> (${(Number(t.score) || 0).toLocaleString()}P)`).join(' | ')
                 : '등록된 팀이 없습니다.';
 
-            // 2. 점수 규칙 인풋 세팅
+            // 2. 점수 규칙 세팅
             document.getElementById('rule-p1').value = currentState.rules.p1;
             document.getElementById('rule-p2').value = currentState.rules.p2;
             document.getElementById('rule-p3').value = currentState.rules.p3;
 
-            // 3. 즉시 점수 부여 팀 드롭다운
+            // 3. 즉시 점수 부여 드롭다운
             const quickSelect = document.getElementById('quick-team');
             quickSelect.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
             // 4. 팀 관리 테이블
             document.querySelector('#team-table tbody').innerHTML = teams.map(t => `
-          <tr>
-            <td><input type="text" value="${t.name}" onchange="editTeamName('${t.id}', this.value)" style="width: 90%;"></td>
-            <td style="font-weight: bold; color: var(--gold);">${(Number(t.score) || 0).toLocaleString()} P</td>
-            <td><button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button></td>
-          </tr>
-        `).join('');
+                    <tr>
+                        <td><input type="text" value="${t.name}" onchange="editTeamName('${t.id}', this.value)" style="width: 90%;"></td>
+                        <td style="font-weight: bold; color: var(--gold);">${(Number(t.score) || 0).toLocaleString()} P</td>
+                        <td><button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button></td>
+                    </tr>
+                `).join('');
 
             // 5. 게임 관리 테이블
             document.querySelector('#game-table tbody').innerHTML = games.map(g => `
-          <tr>
-            <td><input type="text" value="${g.name}" onchange="editGameName('${g.id}', this.value)" style="width: 90%;"></td>
-            <td><button class="btn btn-danger" onclick="deleteGame('${g.id}')">삭제</button></td>
-          </tr>
-        `).join('');
+                    <tr>
+                        <td><input type="text" value="${g.name}" onchange="editGameName('${g.id}', this.value)" style="width: 90%;"></td>
+                        <td><button class="btn btn-danger" onclick="deleteGame('${g.id}')">삭제</button></td>
+                    </tr>
+                `).join('');
 
-            // 6. 게임별 순위 드롭다운 렌더링
+            // 6. 게임별 순위 드롭다운 & 기록 인풋 세팅
             const buildOptions = (selectedId) => {
                 let opts = `<option value="">--선택 안됨--</option>`;
                 teams.forEach(t => {
@@ -337,18 +347,30 @@
             document.getElementById('game-selection-list').innerHTML = games.map(g => {
                 const isDone = g.calculated;
                 return `
-            <div style="border: 1px solid var(--card-border); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong>🎮 ${g.name}</strong>
-                ${isDone ? '<span class="badge-done">점수 반영 완료</span>' : '<span class="badge-wait">점수 미반영</span>'}
-              </div>
-              <div style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
-                <label>🥇 1위: <select onchange="setGameRank('${g.id}', 'rank1', this.value)">${buildOptions(g.rank1)}</select></label>
-                <label>🥈 2위: <select onchange="setGameRank('${g.id}', 'rank2', this.value)">${buildOptions(g.rank2)}</select></label>
-                <label>🥉 3위: <select onchange="setGameRank('${g.id}', 'rank3', this.value)">${buildOptions(g.rank3)}</select></label>
-              </div>
-            </div>
-          `;
+                        <div style="border: 1px solid var(--card-border); padding: 14px; border-radius: 8px; margin-bottom: 12px; background: rgba(255,255,255,0.01);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <strong style="font-size: 1.05rem;">🎮 ${g.name}</strong>
+                                ${isDone ? '<span class="badge-done">점수 반영 완료</span>' : '<span class="badge-wait">점수 미반영</span>'}
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
+                                <div class="rank-record-group">
+                                    <span>🥇 1위:</span>
+                                    <select onchange="setGameRank('${g.id}', 'rank1', this.value)" style="flex: 1;">${buildOptions(g.rank1)}</select>
+                                    <input type="text" placeholder="기록(예: 10.5초)" value="${g.record1 || ''}" onchange="setGameRecord('${g.id}', 'record1', this.value)" style="width: 110px;">
+                                </div>
+                                <div class="rank-record-group">
+                                    <span>🥈 2위:</span>
+                                    <select onchange="setGameRank('${g.id}', 'rank2', this.value)" style="flex: 1;">${buildOptions(g.rank2)}</select>
+                                    <input type="text" placeholder="기록" value="${g.record2 || ''}" onchange="setGameRecord('${g.id}', 'record2', this.value)" style="width: 110px;">
+                                </div>
+                                <div class="rank-record-group">
+                                    <span>🥉 3위:</span>
+                                    <select onchange="setGameRank('${g.id}', 'rank3', this.value)" style="flex: 1;">${buildOptions(g.rank3)}</select>
+                                    <input type="text" placeholder="기록" value="${g.record3 || ''}" onchange="setGameRecord('${g.id}', 'record3', this.value)" style="width: 110px;">
+                                </div>
+                            </div>
+                        </div>
+                    `;
             }).join('');
         }
 
@@ -367,8 +389,15 @@
             const g = currentState.games.find(item => String(item.id) === String(gameId));
             if (g) {
                 g[rankKey] = value ? value : null;
-                // 순위가 바뀌었으므로 재계산이 필요할 수 있음을 명시
-                g.calculated = false;
+                g.calculated = false; // 순위 변경 시 미반영 상태로 전환
+                updateDB();
+            }
+        }
+
+        function setGameRecord(gameId, recordKey, value) {
+            const g = currentState.games.find(item => String(item.id) === String(gameId));
+            if (g) {
+                g[recordKey] = value ? value.trim() : "";
                 updateDB();
             }
         }
@@ -450,6 +479,9 @@
                 rank1: null,
                 rank2: null,
                 rank3: null,
+                record1: "",
+                record2: "",
+                record3: "",
                 calculated: false
             });
             input.value = '';
