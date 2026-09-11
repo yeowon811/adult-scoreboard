@@ -223,11 +223,23 @@
         <div class="grid-2">
             <div class="card">
                 <h3>조(팀) 관리</h3>
-                <div style="display: flex; gap: 6px; margin: 10px 0;">
-                    <input type="text" id="new-team-name" placeholder="신규 팀명" style="flex: 1;" onkeydown="if(event.key==='Enter') addTeam()">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">* 비밀번호는 각 조원이 실시간 점수 현황판에 입장할 때 사용됩니다.</p>
+                <div style="display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap;">
+                    <input type="text" id="new-team-name" placeholder="신규 팀명" style="flex: 2; min-width: 100px;" onkeydown="if(event.key==='Enter') addTeam()">
+                    <input type="text" id="new-team-password" placeholder="비밀번호" style="flex: 1; min-width: 90px;" onkeydown="if(event.key==='Enter') addTeam()">
                     <button class="btn" onclick="addTeam()">추가</button>
                 </div>
-                <table id="team-table"><tbody></tbody></table>
+                <table id="team-table">
+                    <thead>
+                        <tr style="color: var(--text-muted); font-size: 0.85rem;">
+                            <th>조 이름</th>
+                            <th style="width: 110px;">비밀번호</th>
+                            <th style="width: 90px;">총점</th>
+                            <th style="width: 60px;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
             <div class="card">
@@ -286,10 +298,10 @@
         const defaultState = {
             rules: { p1: 100, p2: 70, p3: 40 },
             teams: [
-                { id: 1, name: "1조", score: 0 },
-                { id: 2, name: "2조", score: 0 },
-                { id: 3, name: "3조", score: 0 },
-                { id: 4, name: "4조", score: 0 }
+                { id: 1, name: "1조", score: 0, password: "1111" },
+                { id: 2, name: "2조", score: 0, password: "2222" },
+                { id: 3, name: "3조", score: 0, password: "3333" },
+                { id: 4, name: "4조", score: 0, password: "4444" }
             ],
             games: [
                 { id: 1, name: "줄다리기", multiplier: 1.0, rank1: null, rank2: null, rank3: null, record1: "", record2: "", record3: "", calculated: false }
@@ -499,10 +511,11 @@
             const quickSelect = document.getElementById('quick-team');
             quickSelect.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
-            // 4. 팀 관리 테이블
+            // 4. 팀 관리 테이블 (비밀번호 입력 포함)
             document.querySelector('#team-table tbody').innerHTML = teams.map(t => `
                     <tr>
                         <td><input type="text" value="${t.name}" onchange="editTeamName('${t.id}', this.value)" style="width: 90%;"></td>
+                        <td><input type="text" value="${t.password || ''}" placeholder="비밀번호" onchange="editTeamPassword('${t.id}', this.value)" style="width: 90%;"></td>
                         <td style="font-weight: bold; color: var(--gold);">${(Number(t.score) || 0).toLocaleString()} P</td>
                         <td><button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button></td>
                     </tr>
@@ -651,10 +664,13 @@
 
         function addTeam() {
             const input = document.getElementById('new-team-name');
+            const pwInput = document.getElementById('new-team-password');
             const val = input.value.trim();
+            const pwVal = pwInput.value.trim();
             if (!val) return;
-            currentState.teams.push({ id: String(Date.now()), name: val, score: 0 });
+            currentState.teams.push({ id: String(Date.now()), name: val, score: 0, password: pwVal || '0000' });
             input.value = '';
+            pwInput.value = '';
             updateDB();
         }
 
@@ -662,6 +678,14 @@
             const t = currentState.teams.find(x => String(x.id) === String(id));
             if (t) {
                 t.name = name.trim();
+                updateDB();
+            }
+        }
+
+        function editTeamPassword(id, pw) {
+            const t = currentState.teams.find(x => String(x.id) === String(id));
+            if (t) {
+                t.password = pw.trim();
                 updateDB();
             }
         }
