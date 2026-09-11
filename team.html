@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>실시간 점수 현황판</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --gold: #f59e0b;
+            --gold-light: #fbbf24;
+            --highlight: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 24px 16px;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+            .card h2 {
+                font-size: 1.15rem;
+                margin-bottom: 14px;
+                border-bottom: 1px solid var(--card-border);
+                padding-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+        }
+
+        /* ================= 🔒 잠금 화면 ================= */
+        #user-lock {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 16px;
+        }
+
+        #user-lock .card {
+            text-align: center;
+            width: 100%;
+            max-width: 340px;
+            margin-bottom: 0;
+        }
+
+        .btn {
+            background: var(--highlight);
+            color: #0b1120;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+            .btn:hover {
+                opacity: 0.9;
+            }
+
+        input[type="password"], input[type="text"] {
+            background: #0b1120;
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+            .btn-logout:hover {
+                color: var(--text);
+                border-color: var(--text-muted);
+            }
+
+        /* ================= 🎯 내 조 현황 카드 ================= */
+        .my-team-card {
+            text-align: center;
+            padding: 34px 20px;
+            background: linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, rgba(30, 41, 59, 1) 100%);
+        }
+
+        .my-team-medal {
+            font-size: 3rem;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .my-team-name {
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .my-team-rank {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--highlight);
+            margin-bottom: 14px;
+        }
+
+        .my-team-score-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .my-team-score {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: var(--gold-light);
+        }
+
+        .my-team-note {
+            margin-top: 14px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* ================= 🎮 게임별 결과 ================= */
+        #game-results-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .game-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 4px;
+        }
+
+        .game-ranks-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .rank-entry {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            min-width: 0;
+        }
+
+        .rank-entry-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .team-name-tag {
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .record-tag {
+            color: var(--highlight);
+            font-size: 0.72rem;
+            background: rgba(56, 189, 248, 0.15);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        /* 모바일 최적화 */
+        @media (max-width: 768px) {
+            body {
+                padding: 14px 10px;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            #game-results-list {
+                gap: 8px;
+            }
+
+            .my-team-score {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔒 조별 비밀번호 입장 화면 -->
+    <div id="user-lock">
+        <div class="card">
+            <h2 style="justify-content: center; border-bottom: none; padding-bottom: 0; margin-bottom: 6px;">🔒 조 입장</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">우리 조 비밀번호를 입력하면<br>우리 조의 점수와 순위를 볼 수 있어요.</p>
+            <input type="password" id="team-pin-input" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter') unlockUser()">
+            <button class="btn" onclick="unlockUser()">입장하기</button>
+        </div>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <header>
+            <h1>🏆 실시간 점수 현황판</h1>
+            <button class="btn-logout" onclick="logoutUser()">다른 조로 로그인</button>
+        </header>
+
+        <!-- 🎯 내 조 현황 (본인 조의 점수와 순위만 표시) -->
+        <div class="card my-team-card">
+            <div class="my-team-medal" id="my-team-medal">🎯</div>
+            <div class="my-team-name" id="my-team-name">-</div>
+            <div class="my-team-rank" id="my-team-rank">-</div>
+            <div class="my-team-score-label">우리 조 총점</div>
+            <div class="my-team-score" id="my-team-score">0 P</div>
+            <div class="my-team-note">* 다른 조의 점수와 순위는 공개되지 않습니다.</div>
+        </div>
+
+        <!-- 게임별 결과 -->
+        <div class="card">
+            <h2>🎮 게임별 순위 및 기록</h2>
+            <div id="game-results-list">
+                <div class="empty-state" style="grid-column: span 2;">등록된 게임 결과가 없습니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdW4Nu4mCgOoF2152ZImcgb-v6wp-hiiI",
+            authDomain: "adult-scoreboard.firebaseapp.com",
+            databaseURL: "https://adult-scoreboard-default-rtdb.firebaseio.com",
+            projectId: "adult-scoreboard",
+            storageBucket: "adult-scoreboard.firebasestorage.app",
+            messagingSenderId: "941156687343",
+            appId: "1:941156687343:web:31c344c0110c59d62d2a1a",
+            measurementId: "G-NGBSSPGHDG"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 로그인한 조(팀) id — 새로고침해도 유지되도록 로컬 저장소 사용
+        let loggedInTeamId = null;
+        try {
+            loggedInTeamId = localStorage.getItem('scoreboard_team_id');
+        } catch (e) {
+            loggedInTeamId = null;
+        }
+
+        let latestState = null;
+
+        function toArray(data) {
+            if (!data) return [];
+            return Array.isArray(data) ? data : Object.values(data);
+        }
+
+        db.ref('scoreboard').on('value', (snapshot) => {
+            const state = snapshot.val();
+            latestState = state;
+            if (!state) {
+                showLockScreen();
+                return;
+            }
+
+            const teams = toArray(state.teams);
+
+            if (loggedInTeamId && teams.some(t => String(t.id) === String(loggedInTeamId))) {
+                showMainContent();
+                render(state);
+            } else {
+                if (loggedInTeamId) {
+                    // 로그인했던 조가 삭제된 경우 등 -> 다시 잠금
+                    loggedInTeamId = null;
+                    try { localStorage.removeItem('scoreboard_team_id'); } catch (e) {}
+                }
+                showLockScreen();
+            }
+        });
+
+        function showLockScreen() {
+            document.getElementById('user-lock').style.display = 'flex';
+            document.getElementById('main-content').style.display = 'none';
+        }
+
+        function showMainContent() {
+            document.getElementById('user-lock').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }
+
+        function unlockUser() {
+            const pwInput = document.getElementById('team-pin-input');
+            const pw = pwInput.value;
+            if (!pw) {
+                alert('비밀번호를 입력하세요.');
+                return;
+            }
+            if (!latestState) {
+                alert('데이터를 불러오는 중입니다. 잠시 후 다시 시도하세요.');
+                return;
+            }
+            const teams = toArray(latestState.teams);
+            const found = teams.find(t => t.password !== undefined && t.password !== null && String(t.password) === String(pw));
+            if (!found) {
+                alert('비밀번호가 올바르지 않습니다.');
+                return;
+            }
+            loggedInTeamId = String(found.id);
+            try { localStorage.setItem('scoreboard_team_id', loggedInTeamId); } catch (e) {}
+            pwInput.value = '';
+            showMainContent();
+            render(latestState);
+        }
+
+        function logoutUser() {
+            loggedInTeamId = null;
+            try { localStorage.removeItem('scoreboard_team_id'); } catch (e) {}
+            showLockScreen();
+        }
+
+        function render(state) {
+            const rawTeams = toArray(state.teams);
+            const games = toArray(state.games);
+
+            const myTeam = rawTeams.find(t => String(t.id) === String(loggedInTeamId));
+            if (!myTeam) {
+                logoutUser();
+                return;
+            }
+
+            // 전체 순위는 서버 데이터로 내부 계산만 하고, 본인 조 순위 숫자만 노출한다.
+            const sortedTeams = [...rawTeams].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+            const myRank = sortedTeams.findIndex(t => String(t.id) === String(myTeam.id)) + 1;
+            const totalTeams = sortedTeams.length;
+            const medal = myRank === 1 ? '🥇' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : '🎯';
+
+            document.getElementById('my-team-medal').textContent = medal;
+            document.getElementById('my-team-name').textContent = myTeam.name || '미등록';
+            document.getElementById('my-team-rank').textContent = `전체 ${totalTeams}개 조 중 ${myRank}위`;
+            document.getElementById('my-team-score').textContent = `${(Number(myTeam.score) || 0).toLocaleString()} P`;
+
+            // 게임별 순위 및 기록 렌더링 (모든 조의 개별 게임 결과는 공개)
+            const gameResultsList = document.getElementById('game-results-list');
+            if (games.length === 0) {
+                gameResultsList.innerHTML = '<div class="empty-state" style="grid-column: span 2;">등록된 게임 결과가 없습니다.</div>';
+            } else {
+                gameResultsList.innerHTML = games.map(g => {
+                    const findTeam = (rankId) => rawTeams.find(t => String(t.id) === String(rankId));
+                    const t1 = findTeam(g.rank1);
+                    const t2 = findTeam(g.rank2);
+                    const t3 = findTeam(g.rank3);
+
+                    const formatEntry = (medalIcon, team, record) => {
+                        const hasRecord = record && String(record).trim();
+                        return `
+                                    <div class="rank-entry">
+                                        <div class="rank-entry-left">
+                                            <span>${medalIcon}</span>
+                                            <span class="team-name-tag">${team ? team.name : '-'}</span>
+                                        </div>
+                                        ${hasRecord ? `<span class="record-tag">${record}</span>` : ''}
+                                    </div>
+                                `;
+                    };
+
+                    return `
+                                <div class="game-item">
+                                    <div class="game-title">🎮 ${g.name || '게임'}</div>
+                                    <div class="game-ranks-row">
+                                        ${formatEntry('🥇', t1, g.record1)}
+                                        ${formatEntry('🥈', t2, g.record2)}
+                                        ${formatEntry('🥉', t3, g.record3)}
+                                    </div>
+                                </div>
+                            `;
+                }).join('');
+            }
+        }
+    </script>
+</body>
+</html>
