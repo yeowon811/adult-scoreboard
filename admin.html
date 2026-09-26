@@ -238,6 +238,155 @@
             padding: 18px;
         }
 
+        /* ================= 🕵️ 스파이 아이템 & 투자내역 ================= */
+        .spy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .spy-panel {
+            border: 1px solid rgba(244, 114, 182, 0.35);
+            border-radius: 8px;
+            padding: 12px;
+            background: rgba(244, 114, 182, 0.03);
+        }
+
+        .spy-panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .spy-panel-name {
+            font-weight: 800;
+            font-size: 1.05rem;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .item-chip {
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+        }
+
+            .item-chip.used {
+                border-color: #f472b6;
+                background: rgba(244, 114, 182, 0.12);
+            }
+
+        .item-chip-label {
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .item-chip-status {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+        }
+
+        .item-chip.used .item-chip-status {
+            color: #f9a8d4;
+        }
+
+        .item-reset {
+            background: transparent;
+            border: 1px solid #f472b6;
+            color: #f9a8d4;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+        }
+
+        .inv-box {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--card-border);
+        }
+
+        .inv-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .inv-total {
+            color: #f87171;
+            font-weight: 800;
+        }
+
+        .inv-form {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+            .inv-form input {
+                min-width: 0;
+                padding: 6px 8px;
+            }
+
+        .inv-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            padding: 5px 8px;
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            margin-bottom: 4px;
+        }
+
+        .inv-entry-memo {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .inv-entry-time {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            margin-left: 4px;
+        }
+
+        .inv-entry-amount {
+            color: #f87171;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .icon-del {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0 2px;
+        }
+
+            .icon-del:hover {
+                color: var(--danger);
+            }
+
         /* ================= 📩 조별 점수/값 제보 타임라인 ================= */
         .report-timeline {
             max-height: 420px;
@@ -331,6 +480,21 @@
                 <button class="btn btn-undo" onclick="clearAllReports()">전체 삭제</button>
             </div>
             <div id="reports-timeline" class="report-timeline" style="margin-top: 12px;"></div>
+        </div>
+
+        <!-- 🕵️ 스파이 아이템 사용 현황 & 조별 투자내역 -->
+        <div class="card" style="border-color: rgba(244, 114, 182, 0.45);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3>🕵️ 스파이 아이템 & 💸 투자내역</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                        * 스파이가 누른 아이템(손실방어 / x2 / x3)을 초기화하면 해당 조가 다시 사용할 수 있습니다.<br>
+                        * 투자내역에 입력한 손실 금액은 해당 조 스파이 화면의 '투자 내역'에 바로 표시됩니다.
+                    </p>
+                </div>
+                <button class="btn btn-danger" onclick="resetAllItems()">🔄 전체 조 아이템 초기화</button>
+            </div>
+            <div id="spy-grid" class="spy-grid"></div>
         </div>
 
         <!-- 🎮 게임별 조 점수 입력표 (행: 게임 / 열: 조) -->
@@ -522,7 +686,10 @@
                 scores: toMap(g.scores)
             }));
 
+            // ...val: user 화면이 scoreboard 아래에 저장한 다른 데이터(아이템, 투자내역 등)를 보존
+            // (updateDB가 scoreboard 전체를 set 하므로 여기서 빠지면 저장 시 삭제됨)
             currentState = {
+                ...val,
                 rules: val.rules || { p1: 100, p2: 70, p3: 40 },
                 teams: toArray(val.teams).map(t => ({ ...t, password: t.password ?? '', spyPassword: t.spyPassword ?? '' })),
                 games,
@@ -572,11 +739,149 @@
                             <span class="report-item-value">${escapeHtml(r.value || '')}</span>
                         </div>
                         <div class="report-item-right">
-                            <span class="report-item-score">${(Number(r.score) || 0).toLocaleString()}점</span>
+                            ${r.type === 'item'
+                                ? '<span class="report-item-score" style="color:#f472b6;">🕵️ 아이템</span>'
+                                : `<span class="report-item-score">${(Number(r.score) || 0).toLocaleString()}점</span>`}
                             <button class="btn btn-danger" onclick="deleteReport('${r._key}')">삭제</button>
                         </div>
                     </div>
                 `).join('');
+        }
+
+        /* ================= 🕵️ 아이템 & 💸 투자내역 =================
+           user 화면(scoreboard_5.html)과 같은 최상위 경로 사용
+             items/{조id}/{defense|x2|x3} = { used, timestamp, ... }
+             investments/{조id}/{자동키}   = { amount, memo, timestamp } */
+        const ITEMS = {
+            defense: { label: '손실방어', icon: '🛡️' },
+            x2: { label: 'x2', icon: '✖️' },
+            x3: { label: 'x3', icon: '🔥' }
+        };
+        let latestItems = {};
+        let latestInvestments = {};
+        let lastSpySig = null;
+
+        db.ref('items').on('value', snap => { latestItems = snap.val() || {}; renderSpyPanels(); });
+        db.ref('investments').on('value', snap => { latestInvestments = snap.val() || {}; renderSpyPanels(); });
+
+        function shortTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            const p = n => String(n).padStart(2, '0');
+            return `${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+
+        // 조 구성이 바뀔 때만 패널 뼈대를 다시 만들고(입력 중인 값 보존), 내용은 부분 갱신
+        function renderSpyPanels() {
+            const grid = document.getElementById('spy-grid');
+            if (!grid || !currentState) return;
+            const teams = currentState.teams || [];
+            const sig = JSON.stringify(teams.map(t => [t.id, t.name]));
+
+            if (sig !== lastSpySig) {
+                lastSpySig = sig;
+                grid.innerHTML = teams.length === 0
+                    ? '<div class="empty-msg">등록된 조가 없습니다.</div>'
+                    : teams.map(t => `
+                        <div class="spy-panel" data-spy="${t.id}">
+                            <div class="spy-panel-head">
+                                <span class="spy-panel-name">${escapeHtml(t.name)}</span>
+                                <button class="btn btn-undo btn-sm" onclick="resetTeamItems('${t.id}')">이 조 아이템 초기화</button>
+                            </div>
+                            <div class="item-row" data-items></div>
+                            <div class="inv-box">
+                                <div class="inv-head">
+                                    <span>💸 투자내역</span>
+                                    <span class="inv-total" data-inv-total>총 손실 0</span>
+                                </div>
+                                <div class="inv-form">
+                                    <input type="number" placeholder="손실 금액" data-inv-amount style="flex: 1;"
+                                           onkeydown="if(event.key==='Enter') addInvestment('${t.id}')">
+                                    <input type="text" placeholder="메모 (예: 주식 투자)" data-inv-memo style="flex: 1.4;"
+                                           onkeydown="if(event.key==='Enter') addInvestment('${t.id}')">
+                                    <button class="btn btn-sm" onclick="addInvestment('${t.id}')">입력</button>
+                                </div>
+                                <div data-inv-list></div>
+                            </div>
+                        </div>`).join('');
+            }
+
+            teams.forEach(t => {
+                const panel = grid.querySelector(`[data-spy="${CSS.escape(String(t.id))}"]`);
+                if (!panel) return;
+
+                // 아이템 현황
+                const mine = latestItems[t.id] || {};
+                panel.querySelector('[data-items]').innerHTML = Object.entries(ITEMS).map(([key, it]) => {
+                    const used = mine[key] && mine[key].used;
+                    return `
+                        <div class="item-chip ${used ? 'used' : ''}">
+                            <span class="item-chip-label">${it.icon} ${it.label}</span>
+                            <span class="item-chip-status">${used ? `사용 ${shortTime(mine[key].timestamp)}` : '미사용'}</span>
+                            ${used ? `<button class="item-reset" onclick="resetItem('${t.id}', '${key}')">초기화</button>` : ''}
+                        </div>`;
+                }).join('');
+
+                // 투자내역
+                const entries = Object.entries(latestInvestments[t.id] || {})
+                    .map(([k, v]) => ({ _key: k, ...v }))
+                    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                const total = entries.reduce((s, e) => s + Math.abs(Number(e.amount) || 0), 0);
+                panel.querySelector('[data-inv-total]').textContent = `총 손실 -${total.toLocaleString()}`;
+                panel.querySelector('[data-inv-list]').innerHTML = entries.length === 0
+                    ? '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 4px;">투자내역 없음</div>'
+                    : entries.map(e => `
+                        <div class="inv-entry">
+                            <span class="inv-entry-memo">${escapeHtml(e.memo || '손실')}<span class="inv-entry-time">${shortTime(e.timestamp)}</span></span>
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                                <span class="inv-entry-amount">-${Math.abs(Number(e.amount) || 0).toLocaleString()}</span>
+                                <button class="icon-del" title="삭제" onclick="deleteInvestment('${t.id}', '${e._key}')">✕</button>
+                            </span>
+                        </div>`).join('');
+            });
+        }
+
+        function teamNameOf(id) {
+            const t = (currentState?.teams || []).find(x => String(x.id) === String(id));
+            return t ? t.name : '해당 조';
+        }
+
+        function resetItem(teamId, key) {
+            if (!confirm(`${teamNameOf(teamId)}의 '${ITEMS[key].label}' 아이템을 초기화할까요?\n(스파이가 다시 사용할 수 있게 됩니다)`)) return;
+            db.ref(`items/${teamId}/${key}`).remove();
+        }
+
+        function resetTeamItems(teamId) {
+            if (!confirm(`${teamNameOf(teamId)}의 아이템 3개를 모두 초기화할까요?`)) return;
+            db.ref(`items/${teamId}`).remove();
+        }
+
+        function resetAllItems() {
+            if (!confirm('모든 조의 아이템 사용 기록을 초기화할까요?')) return;
+            db.ref('items').remove();
+        }
+
+        function addInvestment(teamId) {
+            const panel = document.querySelector(`[data-spy="${CSS.escape(String(teamId))}"]`);
+            if (!panel) return;
+            const amountEl = panel.querySelector('[data-inv-amount]');
+            const memoEl = panel.querySelector('[data-inv-memo]');
+            const amount = Math.abs(Number(amountEl.value));
+            if (!amountEl.value.trim() || isNaN(amount) || amount === 0) return alert('손실 금액을 숫자로 입력하세요.');
+
+            db.ref(`investments/${teamId}`).push({
+                amount,
+                memo: memoEl.value.trim() || '손실',
+                timestamp: Date.now()
+            });
+            amountEl.value = '';
+            memoEl.value = '';
+            amountEl.focus();
+        }
+
+        function deleteInvestment(teamId, key) {
+            if (!confirm('이 투자내역을 삭제할까요?')) return;
+            db.ref(`investments/${teamId}/${key}`).remove();
         }
 
         function deleteReport(key) {
@@ -605,6 +910,7 @@
             currentState = JSON.parse(JSON.stringify(backupState));
             backupState = null;
             lastMatrixSig = null;
+            lastSpySig = null;
             db.ref('scoreboard').set(currentState);
             alert("이전 상태로 되돌렸습니다.");
         }
@@ -733,6 +1039,7 @@
 
             // 2. 게임 × 조 점수 입력표
             renderMatrix();
+            renderSpyPanels();
 
             // 3. 즉시 점수 부여 드롭다운 (선택값 유지)
             const quickSelect = document.getElementById('quick-team');
