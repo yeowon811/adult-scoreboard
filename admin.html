@@ -680,7 +680,7 @@
                 <div>
                     <h3>📈 조별 점수 변동 추이 (꺾은선 그래프)</h3>
                     <p class="card-desc">
-                        * <strong>시작</strong>을 누르면 점수 입력값과 투자내역이 모두 초기화되어 모든 조가 0점에서 출발하고, <strong>종료</strong>를 누를 때까지 10분마다 현재 총점이 그래프에 자동으로 이어서 기록됩니다.<br>
+                        * <strong>시작</strong>을 누르면 점수 입력값·투자내역·부장 아이템·제보 타임라인이 모두 초기화되어 모든 조가 0점에서 출발하고, <strong>종료</strong>를 누를 때까지 10분마다 현재 총점이 그래프에 자동으로 이어서 기록됩니다.<br>
                         * 10분 기록은 관리자 화면이 열려 있을 때 저장됩니다. (화면을 닫아두었던 구간은 다시 열었을 때 그 시점 점수로 1개만 기록)<br>
                         * <strong>종료</strong> 후 <strong>💸 투자내역 반영</strong>을 누르면 마지막 지점 점수에 각 조 투자 총 금액(이익 − 손실)을 더한 지점이 그래프 맨 끝에 추가됩니다. (그래프에만 표시, 총점은 그대로)
                     </p>
@@ -1198,11 +1198,13 @@
             if (!currentState) return;
             if (graphState.running) return alert('이미 진행 중입니다. 먼저 종료하세요.');
             if (!await askGraphPassword('▶ 그래프 시작')) return;
-            if (!confirm('▶ 시작하면 아래 내용이 모두 지워지고 0점에서 시작합니다.\n· 모든 조의 게임·공통미션·WALL STREET 점수 입력값\n· 모든 조의 💸 투자내역\n(각 표의 행 이름과 조 구성은 유지되며, 기존 그래프는 새로 그려집니다)\n\n시작할까요?')) return;
+            if (!confirm('▶ 시작하면 아래 내용이 모두 지워지고 0점에서 시작합니다.\n· 모든 조의 게임·공통미션·WALL STREET 점수 입력값\n· 모든 조의 💸 투자내역\n· 모든 조의 👔 부장 아이템 사용 기록\n· 📩 제보 타임라인\n(각 표의 행 이름과 조 구성은 유지되며, 기존 그래프는 새로 그려집니다)\n\n시작할까요?')) return;
 
             KIND_KEYS.forEach(kind => currentState[kind].forEach(r => { r.scores = {}; }));
             updateDB();
             db.ref('investments').remove();
+            db.ref('items').remove();
+            db.ref('reports').remove();
 
             const now = Date.now();
             const zero = {};
