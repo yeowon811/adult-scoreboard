@@ -120,6 +120,16 @@
             text-align: left;
         }
 
+        .pw-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
         #admin-lock {
             position: fixed;
             inset: 0;
@@ -540,6 +550,18 @@
 <body>
 
     <!-- 비밀번호 잠금 화면 -->
+    <!-- 그래프 시작/종료 비밀번호 입력 창 -->
+    <div id="graph-pw-modal" class="pw-modal" style="display: none;">
+        <div class="card" style="text-align: center; width: 320px;">
+            <h3 id="graph-pw-title" style="margin-bottom: 12px;">🔒 비밀번호 확인</h3>
+            <input type="password" id="graph-pw-input" placeholder="비밀번호 입력" autocomplete="off" style="width: 100%; margin-bottom: 10px;">
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-undo" id="graph-pw-cancel" style="flex: 1;">취소</button>
+                <button class="btn" id="graph-pw-ok" style="flex: 1;">확인</button>
+            </div>
+        </div>
+    </div>
+
     <div id="admin-lock">
         <div class="card" style="text-align: center; width: 320px;">
             <h2 style="margin-bottom: 15px;">🔒 관리자 인증</h2>
@@ -1157,9 +1179,45 @@
             db.ref('graph/points/' + key).transaction(cur => cur ? undefined : point, () => { pendingPointKey = null; });
         }
 
-        function startGraph() {
+        // 그래프 ▶ 시작 / ⏹ 종료 전용 비밀번호 (관리자 입장 비밀번호와 별개로 바꿀 수 있음)
+        const GRAPH_CONTROL_PASSWORD = '1234';
+
+        // 비밀번호 입력 창 → 맞으면 true, 취소하거나 틀리면 false
+        function askGraphPassword(actionLabel) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('graph-pw-modal');
+                const input = document.getElementById('graph-pw-input');
+                const ok = document.getElementById('graph-pw-ok');
+                const cancel = document.getElementById('graph-pw-cancel');
+                document.getElementById('graph-pw-title').textContent = `🔒 ${actionLabel}`;
+                input.value = '';
+                modal.style.display = 'flex';
+                input.focus();
+
+                const close = result => {
+                    modal.style.display = 'none';
+                    ok.onclick = cancel.onclick = input.onkeydown = null;
+                    resolve(result);
+                };
+                const submit = () => {
+                    if (input.value === GRAPH_CONTROL_PASSWORD) return close(true);
+                    alert('비밀번호가 올바르지 않습니다.');
+                    input.value = '';
+                    input.focus();
+                };
+                ok.onclick = submit;
+                cancel.onclick = () => close(false);
+                input.onkeydown = e => {
+                    if (e.key === 'Enter') submit();
+                    if (e.key === 'Escape') close(false);
+                };
+            });
+        }
+
+        async function startGraph() {
             if (!currentState) return;
             if (graphState.running) return alert('이미 진행 중입니다. 먼저 종료하세요.');
+            if (!await askGraphPassword('▶ 그래프 시작')) return;
             if (!confirm('▶ 시작하면 모든 조의 게임·공통미션·WALL STREET 점수 입력값이 지워지고 0점에서 시작합니다.\n(각 표의 행 이름과 조 구성은 유지되며, 기존 그래프는 새로 그려집니다)\n\n시작할까요?')) return;
 
             saveBackup();
@@ -1177,8 +1235,9 @@
             });
         }
 
-        function stopGraph() {
+        async function stopGraph() {
             if (!graphState.running) return alert('진행 중이 아닙니다.');
+            if (!await askGraphPassword('⏹ 그래프 종료')) return;
             if (!confirm('⏹ 종료할까요?\n현재 점수를 마지막 지점으로 기록하고 10분 자동 기록을 멈춥니다.')) return;
 
             recalcTotals();
