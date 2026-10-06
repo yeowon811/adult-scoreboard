@@ -20,6 +20,10 @@
             --danger: #ef4444;
             --success: #10b981;
             --gold: #f59e0b;
+            --boss: #f472b6;
+            --profit: #34d399;
+            --loss: #f87171;
+            --mission: #2dd4bf;
         }
 
         * {
@@ -48,6 +52,13 @@
             margin-bottom: 16px;
         }
 
+        .card-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+
         .btn {
             background: var(--primary);
             color: white;
@@ -63,6 +74,11 @@
                 opacity: 0.9;
             }
 
+            .btn:disabled {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
+
         .btn-danger {
             background: var(--danger);
         }
@@ -73,6 +89,11 @@
 
         .btn-undo {
             background: #64748b;
+        }
+
+        .btn-invest {
+            background: var(--gold);
+            color: #1c1917;
         }
 
         .btn-sm {
@@ -109,15 +130,11 @@
             z-index: 999;
         }
 
-        /* 꺾은선 차트 컨테이너 */
-        .chart-box {
-            position: relative;
-            width: 100%;
-            height: 340px;
-            margin-top: 14px;
-        }
+        .pos { color: var(--profit); }
+        .neg { color: var(--loss); }
+        .zero { color: var(--text-muted); }
 
-        /* ================= 🎮 게임 × 조 점수 매트릭스 ================= */
+        /* ================= 🎮 게임 / 🤝 공통미션 / 💹 WALL STREET × 조 점수 매트릭스 ================= */
         .matrix-wrap {
             overflow-x: auto;
             margin-top: 12px;
@@ -155,7 +172,7 @@
                     min-width: 110px;
                 }
 
-            /* 첫 열(게임명) 고정 */
+            /* 첫 열(게임/미션명) 고정 */
             .score-matrix .sticky-col {
                 position: sticky;
                 left: 0;
@@ -185,7 +202,7 @@
                 border-top: 2px solid var(--gold);
             }
 
-        .game-name-input {
+        .row-name-input {
             width: 100%;
             font-weight: 700;
         }
@@ -207,12 +224,20 @@
             color: var(--gold);
         }
 
-        .spy-input {
+        .mission-card {
+            border-color: rgba(45, 212, 191, 0.45);
+        }
+
+        .wallstreet-card {
+            border-color: rgba(250, 204, 21, 0.45);
+        }
+
+        .boss-input {
             border-color: #7f1d1d;
             background: #1c0f14;
         }
 
-        .spy-label {
+        .boss-label {
             color: #f87171;
         }
 
@@ -224,7 +249,7 @@
             font-weight: 600;
         }
 
-        .add-game-bar {
+        .add-row-bar {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
@@ -238,29 +263,29 @@
             padding: 18px;
         }
 
-        /* ================= 🕵️ 스파이 아이템 & 투자내역 ================= */
-        .spy-grid {
+        /* ================= 👔 부장 아이템 & 투자내역 ================= */
+        .boss-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 12px;
             margin-top: 12px;
         }
 
-        .spy-panel {
+        .boss-panel {
             border: 1px solid rgba(244, 114, 182, 0.35);
             border-radius: 8px;
             padding: 12px;
             background: rgba(244, 114, 182, 0.03);
         }
 
-        .spy-panel-head {
+        .boss-panel-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
 
-        .spy-panel-name {
+        .boss-panel-name {
             font-weight: 800;
             font-size: 1.05rem;
         }
@@ -284,7 +309,7 @@
         }
 
             .item-chip.used {
-                border-color: #f472b6;
+                border-color: var(--boss);
                 background: rgba(244, 114, 182, 0.12);
             }
 
@@ -304,7 +329,7 @@
 
         .item-reset {
             background: transparent;
-            border: 1px solid #f472b6;
+            border: 1px solid var(--boss);
             color: #f9a8d4;
             border-radius: 4px;
             padding: 2px 8px;
@@ -322,14 +347,20 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 8px;
             font-size: 0.9rem;
             font-weight: 700;
         }
 
         .inv-total {
-            color: #f87171;
-            font-weight: 800;
+            font-weight: 900;
+            font-size: 1.05rem;
+        }
+
+        .inv-breakdown {
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin: 2px 0 8px;
         }
 
         .inv-form {
@@ -341,6 +372,21 @@
             .inv-form input {
                 min-width: 0;
                 padding: 6px 8px;
+            }
+
+        .inv-type {
+            padding: 6px 8px;
+            font-weight: 800;
+        }
+
+            .inv-type.profit {
+                border-color: var(--profit);
+                color: var(--profit);
+            }
+
+            .inv-type.loss {
+                border-color: var(--loss);
+                color: var(--loss);
             }
 
         .inv-entry {
@@ -355,21 +401,31 @@
             margin-bottom: 4px;
         }
 
-        .inv-entry-memo {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .inv-chip {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 4px;
         }
+
+            .inv-chip.profit {
+                background: rgba(52, 211, 153, 0.15);
+                color: var(--profit);
+            }
+
+            .inv-chip.loss {
+                background: rgba(248, 113, 113, 0.15);
+                color: var(--loss);
+            }
 
         .inv-entry-time {
             color: var(--text-muted);
             font-size: 0.72rem;
-            margin-left: 4px;
+            margin-left: 6px;
         }
 
         .inv-entry-amount {
-            color: #f87171;
             font-weight: 800;
             white-space: nowrap;
         }
@@ -442,6 +498,43 @@
             font-size: 1.05rem;
             white-space: nowrap;
         }
+
+        /* ================= 📈 그래프 ================= */
+        .chart-box {
+            position: relative;
+            width: 100%;
+            height: 340px;
+            margin-top: 14px;
+        }
+
+        .graph-status {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+            .graph-status.running {
+                border-color: var(--success);
+            }
+
+        .live-dot {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--success);
+            margin-right: 6px;
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.25; }
+        }
     </style>
 </head>
 <body>
@@ -470,70 +563,83 @@
             <div id="live-ranking-bar" style="margin-top: 10px; font-weight: 600; color: var(--gold); line-height: 1.6;">-</div>
         </div>
 
-        <!-- 📩 조별 점수/값 제보 (타임라인) -->
+        <!-- 1. 🎮 게임별 점수 입력표 (행: 게임 / 열: 조) -->
+        <div class="card">
+            <h3>🎮 게임별 점수 입력표</h3>
+            <p class="card-desc">
+                * 칸에 점수를 입력하면 조별 총점(게임 + 공통미션 + WALL STREET)이 자동으로 합산·동기화됩니다. (빈 칸 = 미입력)<br>
+                * Enter: 아래 칸 / Shift+Enter: 위 칸 이동
+            </p>
+            <div class="add-row-bar">
+                <input type="text" id="new-games-name" placeholder="새 게임 이름 (예: 이어달리기)" style="flex: 2; min-width: 160px;" onkeydown="if(event.key==='Enter') addRow('games')">
+                <button class="btn btn-success" onclick="addRow('games')">＋ 게임 추가</button>
+            </div>
+            <div id="matrix-games" class="matrix-wrap"></div>
+        </div>
+
+        <!-- 2. 🤝 공통미션별 점수 입력표 (행: 공통미션 / 열: 조) -->
+        <div class="card mission-card">
+            <h3>🤝 공통미션별 점수 입력표</h3>
+            <p class="card-desc">
+                * 공통미션 점수도 게임 점수와 함께 조별 총점에 합산되고, 현황판(user)에 따로 표시됩니다.<br>
+                * 감점은 음수(예: -30)로 입력하세요. Enter: 아래 칸 / Shift+Enter: 위 칸 이동
+            </p>
+            <div class="add-row-bar">
+                <input type="text" id="new-missions-name" placeholder="새 공통미션 이름 (예: 단체사진 미션)" style="flex: 2; min-width: 160px;" onkeydown="if(event.key==='Enter') addRow('missions')">
+                <button class="btn btn-success" onclick="addRow('missions')">＋ 공통미션 추가</button>
+            </div>
+            <div id="matrix-missions" class="matrix-wrap"></div>
+        </div>
+
+        <!-- 2-1. 💹 WALL STREET 점수 입력표 (행: 항목 / 열: 조) -->
+        <div class="card wallstreet-card">
+            <h3>💹 WALL STREET 점수 입력표</h3>
+            <p class="card-desc">
+                * WALL STREET 점수도 게임·공통미션 점수와 함께 조별 총점에 합산되고, 현황판(user)에 따로 표시됩니다.<br>
+                * 감점은 음수(예: -30)로 입력하세요. Enter: 아래 칸 / Shift+Enter: 위 칸 이동
+            </p>
+            <div class="add-row-bar">
+                <input type="text" id="new-wallstreet-name" placeholder="새 WALL STREET 항목 이름 (예: 1라운드)" style="flex: 2; min-width: 160px;" onkeydown="if(event.key==='Enter') addRow('wallstreet')">
+                <button class="btn btn-success" onclick="addRow('wallstreet')">＋ 항목 추가</button>
+            </div>
+            <div id="matrix-wallstreet" class="matrix-wrap"></div>
+        </div>
+
+        <!-- 3. 👔 부장 아이템 사용 현황 & 조별 투자내역 -->
+        <div class="card" style="border-color: rgba(244, 114, 182, 0.45);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3>👔 부장 아이템 & 💸 투자내역</h3>
+                    <p class="card-desc">
+                        * 부장이 누른 아이템(손실방어 / x2 / x3)을 초기화하면 해당 조가 다시 사용할 수 있습니다.<br>
+                        * 투자내역은 왼쪽에서 <span class="pos">이익</span> / <span class="neg">손실</span>을 고르고 금액을 입력하세요. 총 금액(이익 − 손실)이 위에 표시되고, 해당 조 부장 화면에도 바로 표시됩니다.
+                    </p>
+                </div>
+                <button class="btn btn-danger" onclick="resetAllItems()">🔄 전체 조 아이템 초기화</button>
+            </div>
+            <div id="boss-grid" class="boss-grid"></div>
+        </div>
+
+        <!-- 4. 📩 조별 점수/값 제보 (타임라인) -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <h3>📩 조별 점수/값 제보 (타임라인)</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">* 실시간 점수 현황판에서 각 조가 보낸 점수/값 제보가 받은 순서대로 표시됩니다.</p>
+                    <p class="card-desc">* 실시간 점수 현황판에서 각 조가 보낸 제보(부장 아이템 사용 등)가 받은 순서대로 표시됩니다.</p>
                 </div>
                 <button class="btn btn-undo" onclick="clearAllReports()">전체 삭제</button>
             </div>
             <div id="reports-timeline" class="report-timeline" style="margin-top: 12px;"></div>
         </div>
 
-        <!-- 🕵️ 스파이 아이템 사용 현황 & 조별 투자내역 -->
-        <div class="card" style="border-color: rgba(244, 114, 182, 0.45);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <h3>🕵️ 스파이 아이템 & 💸 투자내역</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                        * 스파이가 누른 아이템(손실방어 / x2 / x3)을 초기화하면 해당 조가 다시 사용할 수 있습니다.<br>
-                        * 투자내역에 입력한 손실 금액은 해당 조 스파이 화면의 '투자 내역'에 바로 표시됩니다.
-                    </p>
-                </div>
-                <button class="btn btn-danger" onclick="resetAllItems()">🔄 전체 조 아이템 초기화</button>
-            </div>
-            <div id="spy-grid" class="spy-grid"></div>
-        </div>
-
-        <!-- 🎮 게임별 조 점수 입력표 (행: 게임 / 열: 조) -->
-        <div class="card">
-            <div>
-                <h3>🎮 게임별 점수 입력표</h3>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                    * 칸에 점수를 입력하면 조별 총점이 자동으로 합산·동기화됩니다. (빈 칸 = 미입력)<br>
-                    * Enter: 아래 칸 / Shift+Enter: 위 칸 이동
-                </p>
-            </div>
-
-            <div class="add-game-bar">
-                <input type="text" id="new-game-name" placeholder="새 게임 이름 (예: 이어달리기)" style="flex: 2; min-width: 160px;" onkeydown="if(event.key==='Enter') addGame()">
-                <button class="btn btn-success" onclick="addGame()">＋ 게임 추가</button>
-            </div>
-
-            <div id="score-matrix" class="matrix-wrap"></div>
-        </div>
-
-        <!-- 추가/감점 즉시 반영 -->
-        <div class="card">
-            <h3>추가 점수 / 감점 부여</h3>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">* 게임 외 점수는 입력표 하단의 '추가/감점' 행에 누적되어 총점에 합산됩니다.</p>
-            <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
-                <select id="quick-team"></select>
-                <input type="number" id="quick-pts" placeholder="점수 (+50 또는 -30)" onkeydown="if(event.key==='Enter') applyQuickScore()">
-                <button class="btn" onclick="applyQuickScore()">점수 즉시 반영</button>
-            </div>
-        </div>
-
         <!-- 조 관리 -->
         <div class="card">
             <h3>조(팀) 관리</h3>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">* 조마다 비밀번호 2개: <strong>조원 비밀번호</strong>(일반 조원 입장) / <strong class="spy-label">🕵️ 스파이 비밀번호</strong>(해당 조 스파이 입장). 모든 비밀번호는 서로 겹치지 않아야 합니다.</p>
+            <p class="card-desc">* 조마다 비밀번호 2개: <strong>조원 비밀번호</strong>(일반 조원 입장) / <strong class="boss-label">👔 부장 비밀번호</strong>(해당 조 부장 입장). 모든 비밀번호는 서로 겹치지 않아야 합니다.</p>
             <div style="display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap;">
                 <input type="text" id="new-team-name" placeholder="신규 팀명" style="flex: 2; min-width: 100px;" onkeydown="if(event.key==='Enter') addTeam()">
                 <input type="text" id="new-team-password" placeholder="조원 비밀번호" style="flex: 1; min-width: 110px;" onkeydown="if(event.key==='Enter') addTeam()">
-                <input type="text" id="new-team-spy-password" class="spy-input" placeholder="🕵️ 스파이 비밀번호" style="flex: 1; min-width: 130px;" onkeydown="if(event.key==='Enter') addTeam()">
+                <input type="text" id="new-team-boss-password" class="boss-input" placeholder="👔 부장 비밀번호" style="flex: 1; min-width: 130px;" onkeydown="if(event.key==='Enter') addTeam()">
                 <button class="btn" onclick="addTeam()">추가</button>
             </div>
             <table id="team-table">
@@ -541,7 +647,7 @@
                     <tr style="color: var(--text-muted); font-size: 0.85rem;">
                         <th>조 이름</th>
                         <th style="width: 150px;">조원 비밀번호</th>
-                        <th style="width: 150px;" class="spy-label">🕵️ 스파이 비밀번호</th>
+                        <th style="width: 150px;" class="boss-label">👔 부장 비밀번호</th>
                         <th style="width: 90px;">총점</th>
                         <th style="width: 60px;">관리</th>
                     </tr>
@@ -550,18 +656,26 @@
             </table>
         </div>
 
-        <!-- 📈 조별 점수 변동 추이 꺾은선 그래프 -->
+        <!-- 📈 조별 점수 변동 추이 꺾은선 그래프 (시작 ~ 종료, 10분 간격) -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px;">
                 <div>
                     <h3>📈 조별 점수 변동 추이 (꺾은선 그래프)</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">게임 점수 입력 시 게임별로 1개 지점이 자동 기록되며(같은 게임 연속 수정 시 갱신), 추가/감점·수동 기록 시에도 저장됩니다.</p>
+                    <p class="card-desc">
+                        * <strong>시작</strong>을 누르면 모든 조가 0점에서 출발하고, <strong>종료</strong>를 누를 때까지 10분마다 현재 총점이 그래프에 자동으로 이어서 기록됩니다.<br>
+                        * 10분 기록은 관리자 화면이 열려 있을 때 저장됩니다. (화면을 닫아두었던 구간은 다시 열었을 때 그 시점 점수로 1개만 기록)<br>
+                        * <strong>종료</strong> 후 <strong>💸 투자내역 반영</strong>을 누르면 마지막 지점 점수에 각 조 투자 총 금액(이익 − 손실)을 더한 지점이 그래프 맨 끝에 추가됩니다. (그래프에만 표시, 총점은 그대로)
+                    </p>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn" onclick="recordSnapshotManual()">📸 현재 점수 기록 (스냅샷)</button>
-                    <button class="btn btn-undo" onclick="resetHistory()">기록 초기화</button>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-success" id="graph-start-btn" onclick="startGraph()">▶ 시작</button>
+                    <button class="btn btn-danger" id="graph-stop-btn" onclick="stopGraph()">⏹ 종료</button>
+                    <button class="btn btn-invest" id="graph-invest-btn" onclick="applyInvestToGraph()">💸 투자내역 반영</button>
+                    <button class="btn btn-undo" id="graph-invest-cancel-btn" onclick="cancelInvestGraph()" style="display: none;">반영 취소</button>
+                    <a class="btn btn-undo" href="graph.html" target="_blank" style="text-decoration: none;">🖥 발표용 화면</a>
                 </div>
             </div>
+            <div id="graph-status" class="graph-status">-</div>
             <div class="chart-box">
                 <canvas id="scoreLineChart"></canvas>
             </div>
@@ -583,31 +697,61 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // games[].scores = { [teamId]: 입력 점수 }  /  teams[].bonus = 추가·감점 누적
-        // teams[].score = (게임 점수 합) + bonus  → 자동 계산되어 저장 (현황판 호환)
+        // scoreboard.games[] / missions[] / wallstreet[] = { id, name, scores: { [teamId]: 입력 점수 } }
+        // teams[].score = 게임 합 + 공통미션 합 + WALL STREET 합 → 자동 계산되어 저장 (현황판 호환)
+        // teams[].bossPassword = 부장 입장 비밀번호
         const defaultState = {
             rules: { p1: 100, p2: 70, p3: 40 },
             teams: [
-                { id: 1, name: "1조", score: 0, bonus: 0, password: "1111", spyPassword: "11119" },
-                { id: 2, name: "2조", score: 0, bonus: 0, password: "2222", spyPassword: "22229" },
-                { id: 3, name: "3조", score: 0, bonus: 0, password: "3333", spyPassword: "33339" },
-                { id: 4, name: "4조", score: 0, bonus: 0, password: "4444", spyPassword: "44449" }
+                { id: 1, name: "1조", score: 0, password: "1111", bossPassword: "11119" },
+                { id: 2, name: "2조", score: 0, password: "2222", bossPassword: "22229" },
+                { id: 3, name: "3조", score: 0, password: "3333", bossPassword: "33339" },
+                { id: 4, name: "4조", score: 0, password: "4444", bossPassword: "44449" }
             ],
             games: [
                 { id: 1, name: "줄다리기", scores: {} }
             ],
-            history: [
-                {
-                    label: "시작",
-                    scores: { "1": 0, "2": 0, "3": 0, "4": 0 }
-                }
+            missions: [
+                { id: 1, name: "공통미션 1", scores: {} }
+            ],
+            wallstreet: [
+                { id: 1, name: "WALL STREET 1", scores: {} }
             ]
         };
+
+        // 점수 입력표 3종 (게임 / 공통미션 / WALL STREET) 공통 설정
+        const KINDS = {
+            games: {
+                rowLabel: '게임',
+                headLabel: '게임 \\ 조',
+                subLabel: '게임 점수 합계',
+                emptyMsg: '등록된 게임이 없습니다. 위에서 게임을 추가하세요.',
+                wrapId: 'matrix-games',
+                inputId: 'new-games-name'
+            },
+            missions: {
+                rowLabel: '공통미션',
+                headLabel: '공통미션 \\ 조',
+                subLabel: '공통미션 합계',
+                emptyMsg: '등록된 공통미션이 없습니다. 위에서 공통미션을 추가하세요.',
+                wrapId: 'matrix-missions',
+                inputId: 'new-missions-name'
+            },
+            wallstreet: {
+                rowLabel: 'WALL STREET 항목',
+                headLabel: 'WALL STREET \\ 조',
+                subLabel: 'WALL STREET 합계',
+                emptyMsg: '등록된 WALL STREET 항목이 없습니다. 위에서 항목을 추가하세요.',
+                wrapId: 'matrix-wallstreet',
+                inputId: 'new-wallstreet-name'
+            }
+        };
+        const KIND_KEYS = Object.keys(KINDS);
 
         let currentState = null;
         let backupState = null;
         let scoreChart = null;
-        let lastMatrixSig = null;
+        const lastMatrixSig = {};
 
         // 팀별 고유 그래프 색상 팔레트
         const teamColors = [
@@ -635,11 +779,34 @@
             return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
+        const pad = n => String(n).padStart(2, '0');
+
         function formatDateTime(ts) {
             if (!ts) return '-';
             const d = new Date(ts);
-            const pad = n => String(n).padStart(2, '0');
             return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+
+        function shortTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function fmt(n) {
+            return (Number(n) || 0).toLocaleString();
+        }
+
+        // +1,000 / -500 / 0
+        function signed(n) {
+            n = Number(n) || 0;
+            if (n > 0) return '+' + n.toLocaleString();
+            if (n < 0) return '-' + Math.abs(n).toLocaleString();
+            return '0';
+        }
+
+        function toneClass(n) {
+            return n > 0 ? 'pos' : n < 0 ? 'neg' : 'zero';
         }
 
         function unlockAdmin() {
@@ -655,21 +822,28 @@
             return v !== null && v !== undefined && v !== '' && !isNaN(Number(v));
         }
 
-        function gameTotalForTeam(teamId) {
+        function rowTotalForTeam(kind, teamId) {
             let sum = 0;
-            (currentState.games || []).forEach(g => {
-                const v = g.scores ? g.scores[teamId] : undefined;
+            (currentState[kind] || []).forEach(r => {
+                const v = r.scores ? r.scores[teamId] : undefined;
                 if (hasValue(v)) sum += Number(v);
             });
             return Math.round(sum * 100) / 100;
         }
 
-        // 모든 팀의 총점을 게임 점수 + 추가/감점으로 재계산
+        // 모든 팀의 총점을 게임 + 공통미션 + WALL STREET 점수로 재계산
         function recalcTotals() {
             if (!currentState) return;
             currentState.teams.forEach(t => {
-                t.score = Math.round((gameTotalForTeam(t.id) + (Number(t.bonus) || 0)) * 100) / 100;
+                const sum = KIND_KEYS.reduce((s, kind) => s + rowTotalForTeam(kind, t.id), 0);
+                t.score = Math.round(sum * 100) / 100;
             });
+        }
+
+        function currentScoresMap() {
+            const m = {};
+            currentState.teams.forEach(t => { m[t.id] = Number(t.score) || 0; });
+            return m;
         }
 
         // 실시간 구독
@@ -680,42 +854,47 @@
                 return;
             }
 
-            const games = toArray(val.games).map(g => ({
-                id: g.id,
-                name: g.name || '이름 없는 게임',
-                scores: toMap(g.scores)
+            const normRows = data => toArray(data).map(r => ({
+                id: r.id,
+                name: r.name || '이름 없음',
+                scores: toMap(r.scores)
             }));
+            const rawTeams = toArray(val.teams);
 
-            // ...val: user 화면이 scoreboard 아래에 저장한 다른 데이터(아이템, 투자내역 등)를 보존
+            // ...rest: user 화면이 scoreboard 아래에 저장한 다른 데이터를 보존
             // (updateDB가 scoreboard 전체를 set 하므로 여기서 빠지면 저장 시 삭제됨)
+            // history: 이전 버전 그래프 기록 → 이제 최상위 graph 경로를 사용하므로 제거
+            const { history, ...rest } = val;
             currentState = {
-                ...val,
+                ...rest,
                 rules: val.rules || { p1: 100, p2: 70, p3: 40 },
-                teams: toArray(val.teams).map(t => ({ ...t, password: t.password ?? '', spyPassword: t.spyPassword ?? '' })),
-                games,
-                history: toArray(val.history).map(h => ({ label: h.label || '기록', scores: toMap(h.scores) }))
+                teams: rawTeams.map(t => {
+                    const { spyPassword, bonus, ...team } = t;
+                    return { ...team, password: t.password ?? '', bossPassword: t.bossPassword ?? spyPassword ?? '' };
+                }),
+                games: normRows(val.games),
+                missions: normRows(val.missions),
+                wallstreet: normRows(val.wallstreet)
             };
 
-            // 기존 데이터(bonus 필드 없음) 호환: 기존 총점 중 게임 점수를 뺀 나머지를 추가점수로 이관
-            currentState.teams.forEach(t => {
-                if (t.bonus === undefined || t.bonus === null) {
-                    t.bonus = (Number(t.score) || 0) - gameTotalForTeam(t.id);
+            // 이전 버전 데이터 이관: 스파이 비밀번호 → 부장 비밀번호 / 추가·감점(bonus) → 공통미션 행
+            let migrated = history !== undefined || rawTeams.some(t => t.spyPassword !== undefined || t.bonus !== undefined);
+            if (val.missions === undefined) {
+                const legacy = {};
+                rawTeams.forEach(t => { const b = Number(t.bonus) || 0; if (b) legacy[t.id] = b; });
+                if (Object.keys(legacy).length) {
+                    currentState.missions.push({ id: 'legacy-bonus', name: '추가/감점 (이관)', scores: legacy });
                 }
-            });
-            recalcTotals();
-
-            // 히스토리가 비어있으면 초기값 생성
-            if (currentState.history.length === 0) {
-                const initScores = {};
-                currentState.teams.forEach(t => { initScores[t.id] = Number(t.score) || 0; });
-                currentState.history = [{ label: "시작", scores: initScores }];
             }
 
+            recalcTotals();
             renderAdmin();
             renderChart();
+            if (migrated) db.ref('scoreboard').set(currentState);
         });
 
-        // 조별 점수/값 제보 구독 (scoreboard와 별도의 최상위 경로 reports 사용)
+        /* ================= 📩 제보 타임라인 =================
+           scoreboard와 별도의 최상위 경로 reports 사용 */
         db.ref('reports').orderByChild('timestamp').on('value', (snapshot) => {
             const list = [];
             snapshot.forEach(child => {
@@ -740,18 +919,29 @@
                         </div>
                         <div class="report-item-right">
                             ${r.type === 'item'
-                                ? '<span class="report-item-score" style="color:#f472b6;">🕵️ 아이템</span>'
-                                : `<span class="report-item-score">${(Number(r.score) || 0).toLocaleString()}점</span>`}
+                                ? '<span class="report-item-score" style="color: var(--boss);">👔 아이템</span>'
+                                : `<span class="report-item-score">${fmt(r.score)}점</span>`}
                             <button class="btn btn-danger" onclick="deleteReport('${r._key}')">삭제</button>
                         </div>
                     </div>
                 `).join('');
         }
 
-        /* ================= 🕵️ 아이템 & 💸 투자내역 =================
-           user 화면(scoreboard_5.html)과 같은 최상위 경로 사용
+        function deleteReport(key) {
+            if (!confirm('이 제보를 삭제하시겠습니까?')) return;
+            db.ref('reports/' + key).remove();
+        }
+
+        function clearAllReports() {
+            if (!confirm('접수된 모든 제보를 삭제하시겠습니까?')) return;
+            db.ref('reports').remove();
+        }
+
+        /* ================= 👔 부장 아이템 & 💸 투자내역 =================
+           user 화면과 같은 최상위 경로 사용
              items/{조id}/{defense|x2|x3} = { used, timestamp, ... }
-             investments/{조id}/{자동키}   = { amount, memo, timestamp } */
+             investments/{조id}/{자동키}   = { type: 'profit' | 'loss', amount, timestamp }
+             (type이 없는 이전 기록은 손실로 처리) */
         const ITEMS = {
             defense: { label: '손실방어', icon: '🛡️' },
             x2: { label: 'x2', icon: '✖️' },
@@ -759,45 +949,54 @@
         };
         let latestItems = {};
         let latestInvestments = {};
-        let lastSpySig = null;
+        let lastBossSig = null;
 
-        db.ref('items').on('value', snap => { latestItems = snap.val() || {}; renderSpyPanels(); });
-        db.ref('investments').on('value', snap => { latestInvestments = snap.val() || {}; renderSpyPanels(); });
+        db.ref('items').on('value', snap => { latestItems = snap.val() || {}; renderBossPanels(); });
+        db.ref('investments').on('value', snap => { latestInvestments = snap.val() || {}; renderBossPanels(); });
 
-        function shortTime(ts) {
-            if (!ts) return '';
-            const d = new Date(ts);
-            const p = n => String(n).padStart(2, '0');
-            return `${p(d.getHours())}:${p(d.getMinutes())}`;
+        function invType(e) {
+            return e.type === 'profit' ? 'profit' : 'loss';
+        }
+
+        function summarizeInvestments(entries) {
+            let profit = 0, loss = 0;
+            entries.forEach(e => {
+                const a = Math.abs(Number(e.amount) || 0);
+                if (invType(e) === 'profit') profit += a; else loss += a;
+            });
+            return { profit, loss, net: profit - loss };
         }
 
         // 조 구성이 바뀔 때만 패널 뼈대를 다시 만들고(입력 중인 값 보존), 내용은 부분 갱신
-        function renderSpyPanels() {
-            const grid = document.getElementById('spy-grid');
+        function renderBossPanels() {
+            const grid = document.getElementById('boss-grid');
             if (!grid || !currentState) return;
             const teams = currentState.teams || [];
             const sig = JSON.stringify(teams.map(t => [t.id, t.name]));
 
-            if (sig !== lastSpySig) {
-                lastSpySig = sig;
+            if (sig !== lastBossSig) {
+                lastBossSig = sig;
                 grid.innerHTML = teams.length === 0
                     ? '<div class="empty-msg">등록된 조가 없습니다.</div>'
                     : teams.map(t => `
-                        <div class="spy-panel" data-spy="${t.id}">
-                            <div class="spy-panel-head">
-                                <span class="spy-panel-name">${escapeHtml(t.name)}</span>
+                        <div class="boss-panel" data-boss="${t.id}">
+                            <div class="boss-panel-head">
+                                <span class="boss-panel-name">${escapeHtml(t.name)}</span>
                                 <button class="btn btn-undo btn-sm" onclick="resetTeamItems('${t.id}')">이 조 아이템 초기화</button>
                             </div>
                             <div class="item-row" data-items></div>
                             <div class="inv-box">
                                 <div class="inv-head">
                                     <span>💸 투자내역</span>
-                                    <span class="inv-total" data-inv-total>총 손실 0</span>
+                                    <span class="inv-total zero" data-inv-total>총 금액 0</span>
                                 </div>
+                                <div class="inv-breakdown" data-inv-breakdown>이익 +0 · 손실 -0</div>
                                 <div class="inv-form">
-                                    <input type="number" placeholder="손실 금액" data-inv-amount style="flex: 1;"
-                                           onkeydown="if(event.key==='Enter') addInvestment('${t.id}')">
-                                    <input type="text" placeholder="메모 (예: 주식 투자)" data-inv-memo style="flex: 1.4;"
+                                    <select class="inv-type profit" data-inv-type onchange="this.className = 'inv-type ' + this.value">
+                                        <option value="profit">이익</option>
+                                        <option value="loss">손실</option>
+                                    </select>
+                                    <input type="number" placeholder="금액" data-inv-amount style="flex: 1;"
                                            onkeydown="if(event.key==='Enter') addInvestment('${t.id}')">
                                     <button class="btn btn-sm" onclick="addInvestment('${t.id}')">입력</button>
                                 </div>
@@ -807,7 +1006,7 @@
             }
 
             teams.forEach(t => {
-                const panel = grid.querySelector(`[data-spy="${CSS.escape(String(t.id))}"]`);
+                const panel = grid.querySelector(`[data-boss="${CSS.escape(String(t.id))}"]`);
                 if (!panel) return;
 
                 // 아이템 현황
@@ -822,22 +1021,32 @@
                         </div>`;
                 }).join('');
 
-                // 투자내역
+                // 투자내역 (이익 / 손실)
                 const entries = Object.entries(latestInvestments[t.id] || {})
                     .map(([k, v]) => ({ _key: k, ...v }))
                     .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                const total = entries.reduce((s, e) => s + Math.abs(Number(e.amount) || 0), 0);
-                panel.querySelector('[data-inv-total]').textContent = `총 손실 -${total.toLocaleString()}`;
+                const sum = summarizeInvestments(entries);
+                const totalEl = panel.querySelector('[data-inv-total]');
+                totalEl.textContent = `총 금액 ${signed(sum.net)}`;
+                totalEl.className = `inv-total ${toneClass(sum.net)}`;
+                panel.querySelector('[data-inv-breakdown]').textContent = `이익 +${fmt(sum.profit)} · 손실 -${fmt(sum.loss)}`;
                 panel.querySelector('[data-inv-list]').innerHTML = entries.length === 0
                     ? '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 4px;">투자내역 없음</div>'
-                    : entries.map(e => `
+                    : entries.map(e => {
+                        const type = invType(e);
+                        const amount = Math.abs(Number(e.amount) || 0);
+                        return `
                         <div class="inv-entry">
-                            <span class="inv-entry-memo">${escapeHtml(e.memo || '손실')}<span class="inv-entry-time">${shortTime(e.timestamp)}</span></span>
+                            <span>
+                                <span class="inv-chip ${type}">${type === 'profit' ? '이익' : '손실'}</span>
+                                <span class="inv-entry-time">${shortTime(e.timestamp)}</span>
+                            </span>
                             <span style="display: flex; align-items: center; gap: 6px;">
-                                <span class="inv-entry-amount">-${Math.abs(Number(e.amount) || 0).toLocaleString()}</span>
+                                <span class="inv-entry-amount ${type === 'profit' ? 'pos' : 'neg'}">${type === 'profit' ? '+' : '-'}${amount.toLocaleString()}</span>
                                 <button class="icon-del" title="삭제" onclick="deleteInvestment('${t.id}', '${e._key}')">✕</button>
                             </span>
-                        </div>`).join('');
+                        </div>`;
+                    }).join('');
             });
         }
 
@@ -847,7 +1056,7 @@
         }
 
         function resetItem(teamId, key) {
-            if (!confirm(`${teamNameOf(teamId)}의 '${ITEMS[key].label}' 아이템을 초기화할까요?\n(스파이가 다시 사용할 수 있게 됩니다)`)) return;
+            if (!confirm(`${teamNameOf(teamId)}의 '${ITEMS[key].label}' 아이템을 초기화할까요?\n(부장이 다시 사용할 수 있게 됩니다)`)) return;
             db.ref(`items/${teamId}/${key}`).remove();
         }
 
@@ -862,20 +1071,19 @@
         }
 
         function addInvestment(teamId) {
-            const panel = document.querySelector(`[data-spy="${CSS.escape(String(teamId))}"]`);
+            const panel = document.querySelector(`[data-boss="${CSS.escape(String(teamId))}"]`);
             if (!panel) return;
+            const typeEl = panel.querySelector('[data-inv-type]');
             const amountEl = panel.querySelector('[data-inv-amount]');
-            const memoEl = panel.querySelector('[data-inv-memo]');
             const amount = Math.abs(Number(amountEl.value));
-            if (!amountEl.value.trim() || isNaN(amount) || amount === 0) return alert('손실 금액을 숫자로 입력하세요.');
+            if (!amountEl.value.trim() || isNaN(amount) || amount === 0) return alert('금액을 숫자로 입력하세요.');
 
             db.ref(`investments/${teamId}`).push({
+                type: typeEl.value === 'profit' ? 'profit' : 'loss',
                 amount,
-                memo: memoEl.value.trim() || '손실',
                 timestamp: Date.now()
             });
             amountEl.value = '';
-            memoEl.value = '';
             amountEl.focus();
         }
 
@@ -884,16 +1092,7 @@
             db.ref(`investments/${teamId}/${key}`).remove();
         }
 
-        function deleteReport(key) {
-            if (!confirm('이 제보를 삭제하시겠습니까?')) return;
-            db.ref('reports/' + key).remove();
-        }
-
-        function clearAllReports() {
-            if (!confirm('접수된 모든 제보를 삭제하시겠습니까?')) return;
-            db.ref('reports').remove();
-        }
-
+        /* ================= 저장 / 되돌리기 ================= */
         function saveBackup() {
             if (currentState) backupState = JSON.parse(JSON.stringify(currentState));
         }
@@ -909,77 +1108,183 @@
             if (!backupState) return alert("되돌릴 이전 작업 내역이 없습니다.");
             currentState = JSON.parse(JSON.stringify(backupState));
             backupState = null;
-            lastMatrixSig = null;
-            lastSpySig = null;
+            KIND_KEYS.forEach(kind => { lastMatrixSig[kind] = null; });
+            lastBossSig = null;
             db.ref('scoreboard').set(currentState);
             alert("이전 상태로 되돌렸습니다.");
         }
 
-        /* ================= 히스토리(그래프) ================= */
-        function currentScoresMap() {
-            const m = {};
-            currentState.teams.forEach(t => { m[t.id] = Number(t.score) || 0; });
-            return m;
+        /* ================= 📈 그래프 (시작 ~ 종료, 10분 간격) =================
+           최상위 경로 graph 사용 (scoreboard를 덮어써도 기록 유지)
+             graph = { running, startedAt, endedAt, points: { p0000: { k, t, label, scores }, p0001: ..., end: ... } }
+           p0000 = 시작(전 조 0점), pNNNN = 시작 후 NNNN×10분 지점, end = 종료 시점
+           invest = 종료 후 '투자내역 반영' 지점 (type: 'invest', 마지막 지점 점수 + 조별 투자 총액) */
+        const GRAPH_INTERVAL = 10 * 60 * 1000;
+        const Y_STEP = 500;   // 그래프 y축 한 칸 단위
+        let graphState = {};
+        let pendingPointKey = null;
+
+        db.ref('graph').on('value', snap => {
+            graphState = snap.val() || {};
+            renderGraphControls();
+            renderGraphStatus();
+            renderChart();
+        });
+
+        setInterval(graphTick, 1000);
+
+        function duration(ms) {
+            const s = Math.max(0, Math.floor(ms / 1000));
+            return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`;
         }
 
-        function nowLabel() {
-            const now = new Date();
-            const p = n => String(n).padStart(2, '0');
-            return `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}`;
-        }
+        // 1초마다 상태 표시 갱신 + 10분 지점이 아직 기록되지 않았으면 기록
+        function graphTick() {
+            renderGraphStatus();
+            const g = graphState;
+            if (!g || !g.running || !g.startedAt || !currentState) return;
 
-        function addHistorySnapshot(labelName) {
-            if (!currentState) return;
-            if (!currentState.history) currentState.history = [];
+            const k = Math.floor((Date.now() - g.startedAt) / GRAPH_INTERVAL);
+            if (k < 1) return;
+            const key = 'p' + String(k).padStart(4, '0');
+            if ((g.points && g.points[key]) || pendingPointKey === key) return;
+
+            pendingPointKey = key;
             recalcTotals();
-            currentState.history.push({ label: labelName || nowLabel(), scores: currentScoresMap() });
+            const now = Date.now();
+            const point = { k, t: now, label: shortTime(now), scores: currentScoresMap() };
+            // 관리자 화면이 여러 개 열려 있어도 같은 지점은 한 번만 기록
+            db.ref('graph/points/' + key).transaction(cur => cur ? undefined : point, () => { pendingPointKey = null; });
         }
 
-        // 같은 라벨(같은 게임)을 연속 수정하면 마지막 지점을 갱신, 아니면 새 지점 추가
-        function upsertHistorySnapshot(labelName) {
+        function startGraph() {
             if (!currentState) return;
+            if (graphState.running) return alert('이미 진행 중입니다. 먼저 종료하세요.');
+            if (!confirm('▶ 시작하면 모든 조의 게임·공통미션·WALL STREET 점수 입력값이 지워지고 0점에서 시작합니다.\n(각 표의 행 이름과 조 구성은 유지되며, 기존 그래프는 새로 그려집니다)\n\n시작할까요?')) return;
+
+            saveBackup();
+            KIND_KEYS.forEach(kind => currentState[kind].forEach(r => { r.scores = {}; }));
+            updateDB();
+
+            const now = Date.now();
+            const zero = {};
+            currentState.teams.forEach(t => { zero[t.id] = 0; });
+            db.ref('graph').set({
+                running: true,
+                startedAt: now,
+                endedAt: null,
+                points: { p0000: { k: 0, t: now, label: `시작 ${shortTime(now)}`, scores: zero } }
+            });
+        }
+
+        function stopGraph() {
+            if (!graphState.running) return alert('진행 중이 아닙니다.');
+            if (!confirm('⏹ 종료할까요?\n현재 점수를 마지막 지점으로 기록하고 10분 자동 기록을 멈춥니다.')) return;
+
             recalcTotals();
-            const h = currentState.history || (currentState.history = []);
-            const last = h[h.length - 1];
-            if (last && last.label === labelName && h.length > 1) {
-                last.scores = currentScoresMap();
+            const now = Date.now();
+            db.ref('graph').update({
+                running: false,
+                endedAt: now,
+                'points/end': {
+                    k: (now - (graphState.startedAt || now)) / GRAPH_INTERVAL,
+                    t: now,
+                    label: `종료 ${shortTime(now)}`,
+                    scores: currentScoresMap()
+                }
+            });
+        }
+
+        function sortedGraphPoints() {
+            return Object.values(graphState.points || {})
+                .filter(p => p && p.t)
+                .sort((a, b) => a.t - b.t);
+        }
+
+        function investNetOf(teamId) {
+            const entries = Object.values(latestInvestments[teamId] || {}).filter(Boolean);
+            return summarizeInvestments(entries).net;
+        }
+
+        // 종료 후: 마지막 지점 점수 + 조별 투자 총액 → 그래프 맨 끝에 '투자 반영' 지점 추가 (다시 누르면 갱신)
+        function applyInvestToGraph() {
+            if (!currentState) return;
+            if (graphState.running) return alert('먼저 ⏹ 종료를 누른 뒤 반영하세요.');
+            const base = sortedGraphPoints().filter(p => p.type !== 'invest').pop();
+            if (!base) return alert('반영할 그래프 기록이 없습니다. 먼저 ▶ 시작하세요.');
+
+            const baseScores = toMap(base.scores);
+            const scores = {};
+            const lines = [];
+            currentState.teams.forEach(t => {
+                const from = baseScores[t.id] !== undefined ? Number(baseScores[t.id]) || 0 : Number(t.score) || 0;
+                const net = investNetOf(t.id);
+                scores[t.id] = Math.round((from + net) * 100) / 100;
+                lines.push(`${t.name}: ${fmt(from)} ${net < 0 ? '−' : '+'} ${fmt(Math.abs(net))} = ${fmt(scores[t.id])}`);
+            });
+
+            const again = graphState.points && graphState.points.invest;
+            if (!confirm(`💸 투자내역을 그래프에 ${again ? '다시 ' : ''}반영할까요? (총점은 바뀌지 않습니다)\n\n${lines.join('\n')}`)) return;
+
+            db.ref('graph/points/invest').set({
+                type: 'invest',
+                t: Math.max(Date.now(), base.t + 1),
+                label: '💸 투자 반영',
+                scores
+            });
+        }
+
+        function cancelInvestGraph() {
+            if (!confirm('그래프에서 투자내역 반영 지점을 삭제할까요?')) return;
+            db.ref('graph/points/invest').remove();
+        }
+
+        function renderGraphControls() {
+            const running = !!graphState.running;
+            const hasPoints = sortedGraphPoints().length > 0;
+            const invested = !!(graphState.points && graphState.points.invest);
+            document.getElementById('graph-start-btn').disabled = running;
+            document.getElementById('graph-stop-btn').disabled = !running;
+            const investBtn = document.getElementById('graph-invest-btn');
+            investBtn.disabled = running || !hasPoints;
+            investBtn.textContent = invested ? '💸 투자내역 다시 반영' : '💸 투자내역 반영';
+            document.getElementById('graph-invest-cancel-btn').style.display = invested && !running ? '' : 'none';
+        }
+
+        function renderGraphStatus() {
+            const el = document.getElementById('graph-status');
+            if (!el) return;
+            const g = graphState || {};
+            if (g.running && g.startedAt) {
+                const elapsed = Date.now() - g.startedAt;
+                const next = GRAPH_INTERVAL - (elapsed % GRAPH_INTERVAL);
+                el.className = 'graph-status running';
+                el.innerHTML = `<span class="live-dot"></span>진행 중 · 시작 ${shortTime(g.startedAt)} · 경과 ${duration(elapsed)} · 다음 기록까지 ${duration(next)}`;
+            } else if (g.endedAt) {
+                el.className = 'graph-status';
+                const invested = g.points && g.points.invest ? ' · 💸 투자내역 반영됨' : '';
+                el.textContent = `⏹ 종료됨 · ${shortTime(g.startedAt)} ~ ${shortTime(g.endedAt)}${invested} (다시 시작하면 0점부터 새 그래프가 그려집니다)`;
             } else {
-                h.push({ label: labelName, scores: currentScoresMap() });
+                el.className = 'graph-status';
+                el.textContent = '⏸ 대기 중 · ▶ 시작 버튼을 누르면 모든 조가 0점에서 출발합니다.';
             }
-        }
-
-        function recordSnapshotManual() {
-            if (!currentState) return;
-            const label = prompt("기록할 스냅샷 이름을 입력하세요 (미입력 시 현재 시각으로 저장):");
-            if (label === null) return;
-            addHistorySnapshot(label.trim() ? label.trim() : null);
-            updateDB();
-            alert("현재 점수 상태가 그래프에 저장되었습니다.");
-        }
-
-        function resetHistory() {
-            if (!confirm("변동 추이 그래프 기록을 초기화하고 현재 점수를 시작점으로 설정하시겠습니까?")) return;
-            recalcTotals();
-            currentState.history = [{ label: "시작", scores: currentScoresMap() }];
-            updateDB();
         }
 
         // 꺾은선 차트 렌더링
         function renderChart() {
             if (!currentState) return;
             const ctx = document.getElementById('scoreLineChart').getContext('2d');
-            const history = currentState.history || [];
+            const points = sortedGraphPoints();
             const teams = currentState.teams || [];
 
-            const labels = history.map(h => h.label || '기록');
+            const labels = points.map(p => p.label || shortTime(p.t));
+            const investIdx = points.findIndex(p => p.type === 'invest');
 
             const datasets = teams.map((team, idx) => {
                 const color = teamColors[idx % teamColors.length];
-                const data = history.map(h => {
-                    if (h.scores && h.scores[team.id] !== undefined) {
-                        return Number(h.scores[team.id]) || 0;
-                    }
-                    return null;
+                const data = points.map(p => {
+                    const s = toMap(p.scores)[team.id];
+                    return s === undefined || s === null ? null : Number(s) || 0;
                 });
 
                 return {
@@ -988,16 +1293,27 @@
                     borderColor: color,
                     backgroundColor: color,
                     borderWidth: 2.5,
-                    pointRadius: 4,
+                    // 투자 반영 지점은 별 모양 + 직전 구간 점선
+                    pointStyle: points.map(p => p.type === 'invest' ? 'star' : 'circle'),
+                    pointRadius: points.map(p => p.type === 'invest' ? 9 : 4),
                     pointHoverRadius: 6,
+                    segment: { borderDash: c => investIdx > 0 && c.p1DataIndex === investIdx ? [6, 4] : undefined },
                     tension: 0.15,
                     spanGaps: true
                 };
             });
 
+            // y축: 한 칸 = 500. 기본은 0(왼쪽 아래)부터 시작하고,
+            // 음수 값이 생기면 그 값을 덮는 500 단위까지 아래로 칸을 늘린다.
+            const values = datasets.flatMap(d => d.data).filter(v => v !== null);
+            const yMin = Math.min(0, Math.floor(Math.min(0, ...values) / Y_STEP) * Y_STEP);
+            const yMax = Math.max(Y_STEP, Math.ceil(Math.max(0, ...values) / Y_STEP) * Y_STEP);
+
             if (scoreChart) {
                 scoreChart.data.labels = labels;
                 scoreChart.data.datasets = datasets;
+                scoreChart.options.scales.y.min = yMin;
+                scoreChart.options.scales.y.max = yMax;
                 scoreChart.update();
             } else {
                 scoreChart = new Chart(ctx, {
@@ -1018,8 +1334,15 @@
                             }
                         },
                         scales: {
-                            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
-                            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+                            // offset: false → 첫 지점(시작)이 왼쪽 끝 세로축 위에 붙음
+                            x: { offset: false, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                            y: {
+                                min: yMin,
+                                max: yMax,
+                                ticks: { color: '#94a3b8', stepSize: Y_STEP },
+                                // 0 기준선은 조금 더 밝게
+                                grid: { color: c => c.tick && c.tick.value === 0 ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.05)' }
+                            }
                         }
                     }
                 });
@@ -1034,46 +1357,43 @@
             // 1. 실시간 모니터링 바
             const sorted = [...teams].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
             document.getElementById('live-ranking-bar').innerHTML = sorted.length > 0
-                ? sorted.map((t, idx) => `${idx + 1}위: <strong>${escapeHtml(t.name)}</strong> (${(Number(t.score) || 0).toLocaleString()}P)`).join(' | ')
+                ? sorted.map((t, idx) => `${idx + 1}위: <strong>${escapeHtml(t.name)}</strong> (${fmt(t.score)}P)`).join(' | ')
                 : '등록된 팀이 없습니다.';
 
-            // 2. 게임 × 조 점수 입력표
-            renderMatrix();
-            renderSpyPanels();
+            // 2. 게임 / 공통미션 / WALL STREET 점수 입력표
+            KIND_KEYS.forEach(kind => renderMatrix(kind));
 
-            // 3. 즉시 점수 부여 드롭다운 (선택값 유지)
-            const quickSelect = document.getElementById('quick-team');
-            const prevQuick = quickSelect.value;
-            quickSelect.innerHTML = teams.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
-            if (teams.some(t => String(t.id) === prevQuick)) quickSelect.value = prevQuick;
+            // 3. 부장 아이템 & 투자내역
+            renderBossPanels();
 
             // 4. 팀 관리 테이블
             document.querySelector('#team-table tbody').innerHTML = teams.map(t => `
                     <tr>
                         <td><input type="text" value="${escapeHtml(t.name)}" onchange="editTeamName('${t.id}', this.value)" style="width: 90%;"></td>
                         <td><input type="text" value="${escapeHtml(t.password || '')}" placeholder="조원 비밀번호" onchange="editTeamPassword('${t.id}', 'password', this)" style="width: 90%;"></td>
-                        <td><input type="text" class="spy-input" value="${escapeHtml(t.spyPassword || '')}" placeholder="스파이 비밀번호" onchange="editTeamPassword('${t.id}', 'spyPassword', this)" style="width: 90%;"></td>
-                        <td style="font-weight: bold; color: var(--gold);">${(Number(t.score) || 0).toLocaleString()} P</td>
+                        <td><input type="text" class="boss-input" value="${escapeHtml(t.bossPassword || '')}" placeholder="부장 비밀번호" onchange="editTeamPassword('${t.id}', 'bossPassword', this)" style="width: 90%;"></td>
+                        <td style="font-weight: bold; color: var(--gold);">${fmt(t.score)} P</td>
                         <td><button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button></td>
                     </tr>
                 `).join('');
         }
 
-        // 구조(팀/게임 구성)가 바뀔 때만 표를 다시 그리고, 값 변경은 제자리 갱신 → 입력 중 포커스 유지
-        function renderMatrix() {
+        // 구조(팀/행 구성)가 바뀔 때만 표를 다시 그리고, 값 변경은 제자리 갱신 → 입력 중 포커스 유지
+        function renderMatrix(kind) {
             const teams = currentState.teams || [];
-            const games = currentState.games || [];
-            const wrap = document.getElementById('score-matrix');
-            const sig = JSON.stringify([teams.map(t => [t.id, t.name]), games.map(g => g.id)]);
+            const rows = currentState[kind] || [];
+            const wrap = document.getElementById(KINDS[kind].wrapId);
+            const sig = JSON.stringify([teams.map(t => [t.id, t.name]), rows.map(r => r.id)]);
 
-            if (sig !== lastMatrixSig) {
-                wrap.innerHTML = buildMatrixHtml(teams, games);
-                lastMatrixSig = sig;
+            if (sig !== lastMatrixSig[kind]) {
+                wrap.innerHTML = buildMatrixHtml(kind, teams, rows);
+                lastMatrixSig[kind] = sig;
             }
-            patchMatrix();
+            patchMatrix(kind);
         }
 
-        function buildMatrixHtml(teams, games) {
+        function buildMatrixHtml(kind, teams, rows) {
+            const K = KINDS[kind];
             if (teams.length === 0) {
                 return '<div class="empty-msg">등록된 조가 없습니다. 아래 \'조(팀) 관리\'에서 먼저 조를 추가하세요.</div>';
             }
@@ -1082,42 +1402,38 @@
             const head = `
                 <thead>
                     <tr>
-                        <th class="sticky-col">게임 \\ 조</th>
+                        <th class="sticky-col">${K.headLabel}</th>
                         ${teams.map(t => `<th class="team-head">${escapeHtml(t.name)}</th>`).join('')}
                         <th>관리</th>
                     </tr>
                 </thead>`;
 
-            const body = games.length === 0
-                ? `<tr><td colspan="${colCount}" class="empty-msg">등록된 게임이 없습니다. 위에서 게임을 추가하세요.</td></tr>`
-                : games.map(g => `
+            const body = rows.length === 0
+                ? `<tr><td colspan="${colCount}" class="empty-msg">${K.emptyMsg}</td></tr>`
+                : rows.map(r => `
                     <tr>
                         <td class="sticky-col">
-                            <input type="text" class="game-name-input" data-g="${g.id}" data-f="name"
-                                   onchange="editGameName('${g.id}', this.value)">
+                            <input type="text" class="row-name-input" data-r="${r.id}" data-f="name"
+                                   onchange="editRowName('${kind}', '${r.id}', this.value)">
                         </td>
                         ${teams.map(t => `
-                            <td data-cell="${g.id}|${t.id}">
+                            <td data-cell="${r.id}|${t.id}">
                                 <input type="number" step="any" class="score-input" placeholder="-"
-                                       data-g="${g.id}" data-t="${t.id}"
-                                       onchange="setCellScore('${g.id}', '${t.id}', this.value)"
+                                       data-r="${r.id}" data-t="${t.id}"
+                                       onchange="setCellScore('${kind}', '${r.id}', '${t.id}', this.value)"
                                        onkeydown="cellKey(event, this)">
                             </td>`).join('')}
-                        <td><button class="btn btn-danger btn-sm" onclick="deleteGame('${g.id}')">삭제</button></td>
+                        <td><button class="btn btn-danger btn-sm" onclick="deleteRow('${kind}', '${r.id}')">삭제</button></td>
                     </tr>`).join('');
 
             const foot = `
                 <tfoot>
                     <tr>
-                        <td class="sticky-col">게임 점수 합계</td>
-                        ${teams.map(t => `<td data-sum="game|${t.id}"></td>`).join('')}<td></td>
-                    </tr>
-                    <tr>
-                        <td class="sticky-col">추가 / 감점</td>
-                        ${teams.map(t => `<td data-sum="bonus|${t.id}"></td>`).join('')}<td></td>
+                        <td class="sticky-col">${K.subLabel}</td>
+                        ${teams.map(t => `<td data-sum="sub|${t.id}"></td>`).join('')}<td></td>
                     </tr>
                     <tr class="total-row">
-                        <td class="sticky-col">🏆 총점</td>
+                        <td class="sticky-col">🏆 총점 (게임 + 공통미션 + WALL STREET)</td>
                         ${teams.map(t => `<td data-sum="total|${t.id}"></td>`).join('')}<td></td>
                     </tr>
                 </tfoot>`;
@@ -1125,137 +1441,111 @@
             return `<table class="score-matrix">${head}<tbody>${body}</tbody>${foot}</table>`;
         }
 
-        function fmt(n) {
-            return (Number(n) || 0).toLocaleString();
-        }
-
-        function patchMatrix() {
-            const wrap = document.getElementById('score-matrix');
+        function patchMatrix(kind) {
+            const wrap = document.getElementById(KINDS[kind].wrapId);
             const teams = currentState.teams || [];
-            const games = currentState.games || [];
+            const rows = currentState[kind] || [];
             const active = document.activeElement;
             const setVal = (el, v) => { if (el && el !== active && el.value !== String(v)) el.value = v; };
 
-            games.forEach(g => {
-                const sel = `[data-g="${CSS.escape(String(g.id))}"]`;
-                setVal(wrap.querySelector(`input${sel}[data-f="name"]`), g.name);
+            rows.forEach(r => {
+                setVal(wrap.querySelector(`input[data-r="${CSS.escape(String(r.id))}"][data-f="name"]`), r.name);
 
-                // 해당 게임 최고점 강조
-                const vals = teams.map(t => g.scores[t.id]).filter(hasValue).map(Number);
+                // 해당 행 최고점 강조
+                const vals = teams.map(t => r.scores[t.id]).filter(hasValue).map(Number);
                 const top = vals.length ? Math.max(...vals) : null;
 
                 teams.forEach(t => {
-                    const raw = g.scores[t.id];
-                    const cell = wrap.querySelector(`td[data-cell="${CSS.escape(g.id + '|' + t.id)}"]`);
+                    const raw = r.scores[t.id];
+                    const cell = wrap.querySelector(`td[data-cell="${CSS.escape(r.id + '|' + t.id)}"]`);
                     if (!cell) return;
                     setVal(cell.querySelector('input'), hasValue(raw) ? Number(raw) : '');
                     cell.classList.toggle('cell-top', top !== null && hasValue(raw) && Number(raw) === top && vals.length > 1);
                 });
             });
 
-            // 하단 합계 + 순위
+            // 하단 소계 + 총점·순위
             const ranked = [...teams].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
             teams.forEach(t => {
                 const id = CSS.escape(String(t.id));
-                const gameSum = gameTotalForTeam(t.id);
-                const bonus = Number(t.bonus) || 0;
                 const rank = ranked.findIndex(x => (Number(x.score) || 0) === (Number(t.score) || 0)) + 1;
-                const gEl = wrap.querySelector(`td[data-sum="game|${id}"]`);
-                const bEl = wrap.querySelector(`td[data-sum="bonus|${id}"]`);
+                const sEl = wrap.querySelector(`td[data-sum="sub|${id}"]`);
                 const tEl = wrap.querySelector(`td[data-sum="total|${id}"]`);
-                if (gEl) gEl.textContent = `${fmt(gameSum)} P`;
-                if (bEl) bEl.textContent = `${bonus > 0 ? '+' : ''}${fmt(bonus)} P`;
+                if (sEl) sEl.textContent = `${fmt(rowTotalForTeam(kind, t.id))} P`;
                 if (tEl) tEl.innerHTML = `${fmt(t.score)} P<span class="rank-chip">${rank}위</span>`;
             });
         }
 
-        // Enter: 아래 칸 / Shift+Enter: 위 칸 (같은 조 열)
+        // Enter: 아래 칸 / Shift+Enter: 위 칸 (같은 표, 같은 조 열)
         function cellKey(e, el) {
             if (e.key !== 'Enter') return;
             e.preventDefault();
-            const col = [...document.querySelectorAll(`#score-matrix input.score-input[data-t="${CSS.escape(el.dataset.t)}"]`)];
+            const wrap = el.closest('.matrix-wrap');
+            const col = [...wrap.querySelectorAll(`input.score-input[data-t="${CSS.escape(el.dataset.t)}"]`)];
             const idx = col.indexOf(el);
             const next = col[idx + (e.shiftKey ? -1 : 1)];
             el.blur(); // change 이벤트 발생 → 저장
             if (next) { next.focus(); next.select(); }
         }
 
-        /* ================= 게임 관리 ================= */
-        function findGame(id) {
-            return currentState.games.find(g => String(g.id) === String(id));
+        /* ================= 게임 / 공통미션 / WALL STREET 행 관리 ================= */
+        function findRow(kind, id) {
+            return currentState[kind].find(r => String(r.id) === String(id));
         }
 
-        function addGame() {
+        function addRow(kind) {
             if (!currentState) return;
-            const nameEl = document.getElementById('new-game-name');
+            const K = KINDS[kind];
+            const nameEl = document.getElementById(K.inputId);
             const name = nameEl.value.trim();
-            if (!name) return alert("게임 이름을 입력하세요.");
+            if (!name) return alert(`${K.rowLabel} 이름을 입력하세요.`);
 
             saveBackup();
-            currentState.games.push({ id: String(Date.now()), name, scores: {} });
+            currentState[kind].push({ id: String(Date.now()), name, scores: {} });
             nameEl.value = '';
             updateDB();
         }
 
-        function editGameName(id, name) {
-            const g = findGame(id);
-            if (!g || !name.trim()) return;
-            g.name = name.trim();
+        function editRowName(kind, id, name) {
+            const r = findRow(kind, id);
+            if (!r || !name.trim()) return;
+            r.name = name.trim();
             updateDB();
         }
 
-        function deleteGame(id) {
-            const g = findGame(id);
-            if (!g) return;
-            if (!confirm(`'${g.name}' 게임과 입력된 점수를 삭제하시겠습니까? (총점에서 자동 차감됩니다)`)) return;
+        function deleteRow(kind, id) {
+            const r = findRow(kind, id);
+            if (!r) return;
+            if (!confirm(`'${r.name}' ${KINDS[kind].rowLabel}과(와) 입력된 점수를 삭제하시겠습니까? (총점에서 자동 차감됩니다)`)) return;
             saveBackup();
-            currentState.games = currentState.games.filter(x => String(x.id) !== String(id));
-            addHistorySnapshot(`${g.name} 삭제`);
+            currentState[kind] = currentState[kind].filter(x => String(x.id) !== String(id));
             updateDB();
         }
 
-        // 칸에 값 입력 → 저장 + 자동 합산 + 그래프 갱신
-        function setCellScore(gameId, teamId, value) {
-            const g = findGame(gameId);
-            if (!g) return;
+        // 칸에 값 입력 → 저장 + 자동 합산
+        function setCellScore(kind, rowId, teamId, value) {
+            const r = findRow(kind, rowId);
+            if (!r) return;
             const v = String(value).trim();
             if (v !== '' && isNaN(Number(v))) return alert("숫자만 입력할 수 있습니다.");
 
-            const prev = g.scores[teamId];
+            const prev = r.scores[teamId];
             if ((v === '' && !hasValue(prev)) || (v !== '' && Number(v) === Number(prev) && hasValue(prev))) return;
 
             saveBackup();
-            if (v === '') delete g.scores[teamId];
-            else g.scores[teamId] = Number(v);
-
-            upsertHistorySnapshot(g.name);
+            if (v === '') delete r.scores[teamId];
+            else r.scores[teamId] = Number(v);
             updateDB();
         }
 
-        /* ================= 추가/감점 & 조 관리 ================= */
-        function applyQuickScore() {
-            const tid = document.getElementById('quick-team').value;
-            const pts = Number(document.getElementById('quick-pts').value);
-            if (!tid) return alert("팀을 먼저 등록하거나 선택하세요.");
-            if (isNaN(pts) || pts === 0) return alert("유효한 점수를 입력하세요.");
-
-            const t = currentState.teams.find(x => String(x.id) === String(tid));
-            if (!t) return;
-            saveBackup();
-            t.bonus = (Number(t.bonus) || 0) + pts;
-            document.getElementById('quick-pts').value = '';
-            addHistorySnapshot(`${t.name} (${pts > 0 ? '+' : ''}${pts}P)`);
-            updateDB();
-            alert(`${t.name}에 ${pts}점이 반영되었습니다 (그래프에 기록됨).`);
-        }
-
-        // 모든 조의 조원/스파이 비밀번호 중 중복 여부 확인 (자기 자신의 같은 칸은 제외)
+        /* ================= 조 관리 ================= */
+        // 모든 조의 조원/부장 비밀번호 중 중복 여부 확인 (자기 자신의 같은 칸은 제외)
         function findPasswordOwner(pw, exceptTeamId, exceptField) {
             if (!pw) return null;
             for (const t of currentState.teams) {
-                for (const f of ['password', 'spyPassword']) {
+                for (const f of ['password', 'bossPassword']) {
                     if (String(t.id) === String(exceptTeamId) && f === exceptField) continue;
-                    if (String(t[f] || '') === pw) return `${t.name} ${f === 'spyPassword' ? '스파이' : '조원'} 비밀번호`;
+                    if (String(t[f] || '') === pw) return `${t.name} ${f === 'bossPassword' ? '부장' : '조원'} 비밀번호`;
                 }
             }
             return null;
@@ -1264,20 +1554,20 @@
         function addTeam() {
             const input = document.getElementById('new-team-name');
             const pwInput = document.getElementById('new-team-password');
-            const spyInput = document.getElementById('new-team-spy-password');
+            const bossInput = document.getElementById('new-team-boss-password');
             const val = input.value.trim();
             const pwVal = pwInput.value.trim();
-            const spyVal = spyInput.value.trim();
+            const bossVal = bossInput.value.trim();
             if (!val) return alert("팀명을 입력하세요.");
-            if (!pwVal || !spyVal) return alert("조원 비밀번호와 스파이 비밀번호를 모두 입력하세요.");
-            if (pwVal === spyVal) return alert("조원 비밀번호와 스파이 비밀번호는 서로 달라야 합니다.");
-            const dup = findPasswordOwner(pwVal) || findPasswordOwner(spyVal);
+            if (!pwVal || !bossVal) return alert("조원 비밀번호와 부장 비밀번호를 모두 입력하세요.");
+            if (pwVal === bossVal) return alert("조원 비밀번호와 부장 비밀번호는 서로 달라야 합니다.");
+            const dup = findPasswordOwner(pwVal) || findPasswordOwner(bossVal);
             if (dup) return alert(`이미 사용 중인 비밀번호입니다 (${dup}).`);
 
-            currentState.teams.push({ id: String(Date.now()), name: val, score: 0, bonus: 0, password: pwVal, spyPassword: spyVal });
+            currentState.teams.push({ id: String(Date.now()), name: val, score: 0, password: pwVal, bossPassword: bossVal });
             input.value = '';
             pwInput.value = '';
-            spyInput.value = '';
+            bossInput.value = '';
             updateDB();
         }
 
@@ -1293,7 +1583,7 @@
             const t = currentState.teams.find(x => String(x.id) === String(id));
             if (!t) return;
             const pw = el.value.trim();
-            const label = field === 'spyPassword' ? '스파이' : '조원';
+            const label = field === 'bossPassword' ? '부장' : '조원';
             if (!pw) {
                 el.value = t[field] || '';
                 return alert(`${label} 비밀번호는 비워둘 수 없습니다.`);
@@ -1308,19 +1598,20 @@
         }
 
         function deleteTeam(id) {
-            if (!confirm("해당 팀을 삭제하시겠습니까? (게임 점수 입력값도 함께 삭제됩니다)")) return;
+            if (!confirm("해당 팀을 삭제하시겠습니까? (게임·공통미션·WALL STREET 점수 입력값도 함께 삭제됩니다)")) return;
             saveBackup();
             currentState.teams = currentState.teams.filter(x => String(x.id) !== String(id));
-            currentState.games.forEach(g => { delete g.scores[id]; });
+            KIND_KEYS.forEach(kind => currentState[kind].forEach(r => { delete r.scores[id]; }));
             updateDB();
         }
 
         function resetData() {
-            if (!confirm("정말 모든 데이터를 기본값으로 초기화하시겠습니까? 이 작업은 이전 상태로 되돌릴 수 있습니다.")) return;
+            if (!confirm("정말 모든 데이터를 기본값으로 초기화하시겠습니까?\n(점수표는 되돌리기로 복구할 수 있지만, 그래프 기록은 복구되지 않습니다)")) return;
             saveBackup();
             currentState = JSON.parse(JSON.stringify(defaultState));
-            lastMatrixSig = null;
+            KIND_KEYS.forEach(kind => { lastMatrixSig[kind] = null; });
             updateDB();
+            db.ref('graph').remove();
         }
     </script>
 </body>
