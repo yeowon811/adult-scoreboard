@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점수 변동 발표 화면</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --gold: #f59e0b;
+            --primary: #4f46e5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 24px 16px;
+            gap: 14px;
+        }
+
+        /* 🔒 잠금 화면 */
+        #lock {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+            #lock .box {
+                background: var(--card-bg);
+                border: 1px solid var(--card-border);
+                border-radius: 12px;
+                padding: 22px;
+                width: 320px;
+                text-align: center;
+            }
+
+        input, select {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+            .btn:hover {
+                opacity: 0.9;
+            }
+
+        .btn-ghost {
+            background: #334155;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+        }
+
+        .now-label {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        main {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            gap: 16px;
+        }
+
+        .chart-wrap {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .chart-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 💸 투자내역 반영 버튼 (투자 반영 지점이 있을 때만 표시) */
+        .btn-invest {
+            background: var(--gold);
+            color: #1c1917;
+        }
+
+            .btn-invest:disabled {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
+
+            .btn-invest.ready {
+                animation: pulse 1.2s infinite;
+            }
+
+        @keyframes pulse {
+            50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.35); }
+        }
+
+        /* 오른쪽 실시간 순위 */
+        .ranking {
+            width: 280px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+            .ranking h2 {
+                font-size: 1.1rem;
+                margin-bottom: 4px;
+            }
+
+        .rank-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .rank-no {
+            width: 28px;
+            color: var(--text-muted);
+        }
+
+        .rank-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .rank-name {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .rank-score {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .progress {
+            flex: 1;
+            min-width: 160px;
+            height: 6px;
+            border-radius: 3px;
+            background: #334155;
+            overflow: hidden;
+        }
+
+            .progress > div {
+                height: 100%;
+                width: 0;
+                background: var(--gold);
+            }
+
+        .hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 900px) {
+            main {
+                flex-direction: column;
+            }
+
+            .chart-wrap {
+                min-height: 360px;
+            }
+
+            .ranking {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔒 관리자 비밀번호 (admin.html과 동일) -->
+    <div id="lock">
+        <div class="box">
+            <h2 style="margin-bottom: 14px;">🔒 발표 화면</h2>
+            <input type="password" id="pin-input" placeholder="관리자 비밀번호" style="width: 100%; margin-bottom: 10px;" onkeydown="if(event.key==='Enter') unlock()">
+            <button class="btn" style="width: 100%;" onclick="unlock()">입장하기</button>
+        </div>
+    </div>
+
+    <header>
+        <h1>📈 조별 점수 변동 추이</h1>
+        <div class="now-label" id="now-label">-</div>
+    </header>
+
+    <main>
+        <div class="chart-wrap">
+            <div class="chart-inner">
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+        <aside class="ranking">
+            <h2>🏆 순위</h2>
+            <div id="ranking-list"></div>
+        </aside>
+    </main>
+
+    <div class="controls">
+        <button class="btn" id="play-btn" onclick="togglePlay()">▶ 재생</button>
+        <button class="btn btn-ghost" onclick="restart()">⏮ 처음부터</button>
+        <button class="btn btn-ghost" onclick="showAll()">⏭ 전체 보기</button>
+        <button class="btn btn-invest" id="invest-btn" onclick="revealInvest()" style="display: none;">💸</button>
+        <select id="speed" onchange="speed = Number(this.value)">
+            <option value="0.5">0.5배속</option>
+            <option value="1" selected>1배속</option>
+            <option value="2">2배속</option>
+            <option value="4">4배속</option>
+        </select>
+        <div class="progress"><div id="progress-bar"></div></div>
+        <button class="btn btn-ghost" onclick="toggleFullscreen()">⛶ 전체화면</button>
+        <span class="hint">Space: 재생/정지</span>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdW4Nu4mCgOoF2152ZImcgb-v6wp-hiiI",
+            authDomain: "adult-scoreboard.firebaseapp.com",
+            databaseURL: "https://adult-scoreboard-default-rtdb.firebaseio.com",
+            projectId: "adult-scoreboard",
+            storageBucket: "adult-scoreboard.firebasestorage.app",
+            messagingSenderId: "941156687343",
+            appId: "1:941156687343:web:31c344c0110c59d62d2a1a",
+            measurementId: "G-NGBSSPGHDG"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 읽기 전용 화면: scoreboard(조 이름) + graph(기록 지점)만 구독하고 아무것도 쓰지 않음
+        const Y_STEP = 500;            // y축 한 칸 단위 (admin.html과 동일)
+        const SEG_MS = 1500;           // 1배속 기준 지점 사이 1구간 그리는 시간
+        const INVEST_SEG_MS = 3000;    // 투자 반영 구간은 천천히
+        const teamColors = [
+            '#10b981', '#38bdf8', '#f59e0b', '#a855f7',
+            '#f43f5e', '#14b8a6', '#eab308', '#ec4899', '#6366f1'
+        ];
+
+        let teams = [];
+        let graph = {};
+        let labels = [];     // 지점 라벨
+        let series = [];     // [{ name, color, values: [점수 | null] }]
+        let investIdx = -1;  // 투자 반영 지점 위치 (항상 마지막)
+        let yMin = 0, yMax = Y_STEP;
+
+        let pos = 0;         // 현재 재생 위치 (0 ~ 지점수-1, 소수 = 구간 중간)
+        let playing = false;
+        let speed = 1;
+        let lastTs = null;
+        let rafId = null;
+        let investRevealed = false;  // 💸 버튼을 누르기 전에는 투자 반영 구간을 그리지 않음
+        let chart = null;
+
+        function toArray(data) {
+            if (!data) return [];
+            return (Array.isArray(data) ? data : Object.values(data)).filter(x => x !== null && x !== undefined);
+        }
+
+        // Firebase가 숫자 키 객체를 배열로 돌려주는 경우 대비
+        function toMap(data) {
+            if (!data) return {};
+            if (Array.isArray(data)) {
+                const m = {};
+                data.forEach((v, i) => { if (v !== null && v !== undefined) m[i] = v; });
+                return m;
+            }
+            return { ...data };
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function hhmm(ts) {
+            const d = new Date(ts);
+            const p = n => String(n).padStart(2, '0');
+            return `${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+
+        function unlock() {
+            if (document.getElementById('pin-input').value === '1234') {
+                document.getElementById('lock').style.display = 'none';
+            } else {
+                alert('비밀번호가 올바르지 않습니다.');
+            }
+        }
+
+        db.ref('scoreboard/teams').on('value', snap => { teams = toArray(snap.val()); rebuild(); });
+        db.ref('graph').on('value', snap => { graph = snap.val() || {}; rebuild(); });
+
+        // 데이터가 바뀌면 시리즈를 다시 만들고, 재생 중이 아니면 마지막(전체) 모습을 보여줌
+        function rebuild() {
+            const wasAtEnd = !playing && pos >= endPos();
+            const points = Object.values(graph.points || {})
+                .filter(p => p && p.t)
+                .sort((a, b) => a.t - b.t);
+
+            labels = points.map(p => p.label || hhmm(p.t));
+            investIdx = points.findIndex(p => p.type === 'invest');
+            series = teams.map((t, i) => ({
+                name: t.name,
+                color: teamColors[i % teamColors.length],
+                values: points.map(p => {
+                    const s = toMap(p.scores)[t.id];
+                    return s === undefined || s === null ? null : Number(s) || 0;
+                })
+            }));
+
+            // y축 범위는 전체 기록 기준으로 고정 → 재생 중 축이 흔들리지 않음
+            // 0(왼쪽 아래)부터 시작, 음수가 있으면 500 단위로 아래 칸 추가
+            const all = series.flatMap(s => s.values).filter(v => v !== null);
+            yMin = Math.min(0, Math.floor(Math.min(0, ...all) / Y_STEP) * Y_STEP);
+            yMax = Math.max(Y_STEP, Math.ceil(Math.max(0, ...all) / Y_STEP) * Y_STEP);
+
+            const last = endPos();
+            pos = wasAtEnd ? last : Math.min(pos, last);
+            draw();
+        }
+
+        // 투자 반영 직전 지점 (투자 반영 지점이 없으면 -1)
+        function holdPos() {
+            return investIdx > 0 ? investIdx - 1 : -1;
+        }
+
+        // 지금 갈 수 있는 끝 위치: 💸 버튼을 누르기 전이면 투자 반영 직전 지점에서 멈춤
+        function endPos() {
+            if (investIdx > 0 && !investRevealed) return holdPos();
+            return Math.max(0, labels.length - 1);
+        }
+
+        function waitingForInvest() {
+            return investIdx > 0 && !investRevealed && pos >= holdPos();
+        }
+
+        // 위치 pos까지의 선 데이터 (구간 중간이면 보간한 끝점 추가 → 선이 자라나는 효과)
+        function frameData(values) {
+            const out = [];
+            const i = Math.floor(pos);
+            const f = pos - i;
+            for (let k = 0; k <= i && k < values.length; k++) {
+                if (values[k] !== null) out.push({ x: k, y: values[k] });
+            }
+            if (f > 0 && i + 1 < values.length && values[i] !== null && values[i + 1] !== null) {
+                out.push({ x: i + f, y: values[i] + (values[i + 1] - values[i]) * f });
+            }
+            return out;
+        }
+
+        // 각 선의 끝에 '조 이름 점수' 표시
+        const headLabels = {
+            id: 'headLabels',
+            afterDatasetsDraw(c) {
+                const ctx = c.ctx;
+                c.data.datasets.forEach((ds, i) => {
+                    const meta = c.getDatasetMeta(i);
+                    if (meta.hidden || !ds.data.length) return;
+                    const el = meta.data[meta.data.length - 1];
+                    const v = ds.data[ds.data.length - 1].y;
+                    ctx.save();
+                    ctx.fillStyle = ds.borderColor;
+                    ctx.font = '800 15px -apple-system, "Segoe UI", sans-serif';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${ds.label} ${Math.round(v).toLocaleString()}`, el.x + 12, el.y);
+                    ctx.restore();
+                });
+            }
+        };
+
+        function draw() {
+            const datasets = series.map(s => ({
+                label: s.name,
+                data: frameData(s.values),
+                borderColor: s.color,
+                backgroundColor: s.color,
+                borderWidth: 4,
+                pointRadius: ctx => ctx.raw && Number.isInteger(ctx.raw.x) ? (ctx.raw.x === investIdx ? 10 : 5) : 0,
+                pointStyle: ctx => ctx.raw && ctx.raw.x === investIdx ? 'star' : 'circle',
+                segment: { borderDash: c => investIdx > 0 && c.p0.parsed.x >= investIdx - 1 ? [10, 6] : undefined },
+                tension: 0.15
+            }));
+            const xMax = Math.max(1, labels.length - 1);
+
+            if (chart) {
+                chart.data.datasets = datasets;
+                chart.options.scales.x.max = xMax;
+                chart.options.scales.y.min = yMin;
+                chart.options.scales.y.max = yMax;
+                chart.update('none');
+            } else {
+                chart = new Chart(document.getElementById('chart'), {
+                    type: 'line',
+                    data: { datasets },
+                    plugins: [headLabels],
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        layout: { padding: { right: 130, top: 10 } },
+                        plugins: {
+                            legend: { labels: { color: '#f8fafc', font: { size: 14, weight: '700' } } },
+                            tooltip: { enabled: false }
+                        },
+                        scales: {
+                            // x = 지점 번호 (0 = 시작, 왼쪽 끝 세로축 위)
+                            x: {
+                                type: 'linear',
+                                min: 0,
+                                max: xMax,
+                                ticks: {
+                                    color: '#94a3b8',
+                                    stepSize: 1,
+                                    font: { size: 13 },
+                                    // 투자 반영 지점 라벨은 버튼을 누른 뒤에만 표시
+                                    callback: v => !Number.isInteger(v) || (v === investIdx && !investRevealed) ? '' : (labels[v] ?? '')
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            },
+                            y: {
+                                min: yMin,
+                                max: yMax,
+                                ticks: { color: '#94a3b8', stepSize: Y_STEP, font: { size: 13 } },
+                                grid: { color: c => c.tick && c.tick.value === 0 ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.06)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderSide();
+        }
+
+        // 순위 / 현재 지점 라벨 / 진행 막대 / 배너
+        function renderSide() {
+            const rows = series
+                .map(s => {
+                    const d = frameData(s.values);
+                    return { ...s, score: d.length ? d[d.length - 1].y : null };
+                })
+                .filter(r => r.score !== null)
+                .sort((a, b) => b.score - a.score);
+
+            document.getElementById('ranking-list').innerHTML = rows.length === 0
+                ? '<div class="hint">아직 기록이 없습니다.</div>'
+                : rows.map((r, i) => `
+                    <div class="rank-row" style="margin-bottom: 8px;">
+                        <span class="rank-no">${i + 1}</span>
+                        <span class="rank-dot" style="background: ${r.color};"></span>
+                        <span class="rank-name">${escapeHtml(r.name)}</span>
+                        <span class="rank-score">${Math.round(r.score).toLocaleString()}</span>
+                    </div>`).join('');
+
+            const last = labels.length - 1;
+            document.getElementById('now-label').textContent = labels.length ? labels[Math.min(Math.floor(pos), last)] : '기록 없음';
+            document.getElementById('progress-bar').style.width = last > 0 ? `${(pos / last) * 100}%` : '0%';
+            document.getElementById('play-btn').textContent = playing ? '⏸ 일시정지' : '▶ 재생';
+
+            // 💸 버튼: 투자 반영 지점이 있고 아직 안 눌렀을 때만 표시, 직전 지점에 도착하면 활성화
+            const investBtn = document.getElementById('invest-btn');
+            const waiting = waitingForInvest();
+            investBtn.style.display = investIdx > 0 && !investRevealed ? '' : 'none';
+            investBtn.disabled = !waiting;
+            investBtn.classList.toggle('ready', waiting);
+        }
+
+        function step(ts) {
+            if (!playing) return;
+            if (lastTs === null) lastTs = ts;
+            const dt = (ts - lastTs) * speed;
+            lastTs = ts;
+            const last = endPos();
+
+            // 투자 반영 구간은 천천히, 💸 버튼 전이면 직전 지점(last)에서 멈춤
+            const inInvest = investIdx > 0 && pos >= holdPos();
+            pos += dt / (inInvest ? INVEST_SEG_MS : SEG_MS);
+
+            if (pos >= last) {
+                pos = last;
+                playing = false;
+            }
+            draw();
+            if (playing) rafId = requestAnimationFrame(step);
+        }
+
+        function startLoop() {
+            cancelAnimationFrame(rafId);
+            playing = true;
+            lastTs = null;
+            rafId = requestAnimationFrame(step);
+        }
+
+        function play() {
+            if (labels.length < 2) return;
+            if (waitingForInvest()) return;  // 💸 버튼으로만 이어서 재생
+            if (pos >= endPos()) restartPosition();
+            startLoop();
+        }
+
+        function restartPosition() {
+            pos = 0;
+            investRevealed = false;
+        }
+
+        // 💸 투자내역 반영: 멈춰 있던 직전 지점부터 투자 반영 지점까지 이어서 재생
+        function revealInvest() {
+            if (!waitingForInvest()) return;
+            investRevealed = true;
+            startLoop();
+        }
+
+        function togglePlay() {
+            if (playing) {
+                playing = false;
+                draw();
+            } else {
+                play();
+            }
+        }
+
+        function restart() {
+            restartPosition();
+            draw();
+            play();
+        }
+
+        // 전체 보기도 💸 버튼 전이면 투자 반영 직전까지만
+        function showAll() {
+            playing = false;
+            cancelAnimationFrame(rafId);
+            pos = endPos();
+            draw();
+        }
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else document.documentElement.requestFullscreen().catch(() => {});
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space' && document.getElementById('lock').style.display === 'none') {
+                e.preventDefault();
+                togglePlay();
+            }
+        });
+    </script>
+</body>
+</html>
