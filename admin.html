@@ -573,10 +573,6 @@
     <div class="container">
         <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2>⚙️ 스코어보드 관리자 콘솔</h2>
-            <div>
-                <button class="btn btn-undo" onclick="undoState()">↩ 되돌리기 (Undo)</button>
-                <button class="btn btn-danger" onclick="resetData()">데이터 전체 리셋</button>
-            </div>
         </header>
 
         <!-- 상단 실시간 모니터링 축약 뷰 -->
@@ -771,7 +767,6 @@
         const KIND_KEYS = Object.keys(KINDS);
 
         let currentState = null;
-        let backupState = null;
         let scoreChart = null;
         const lastMatrixSig = {};
 
@@ -1114,26 +1109,11 @@
             db.ref(`investments/${teamId}/${key}`).remove();
         }
 
-        /* ================= 저장 / 되돌리기 ================= */
-        function saveBackup() {
-            if (currentState) backupState = JSON.parse(JSON.stringify(currentState));
-        }
-
+        /* ================= 저장 ================= */
         // 저장 직전 항상 총점 재계산
-        function updateDB(createUndo = false) {
-            if (createUndo) saveBackup();
+        function updateDB() {
             recalcTotals();
             db.ref('scoreboard').set(currentState);
-        }
-
-        function undoState() {
-            if (!backupState) return alert("되돌릴 이전 작업 내역이 없습니다.");
-            currentState = JSON.parse(JSON.stringify(backupState));
-            backupState = null;
-            KIND_KEYS.forEach(kind => { lastMatrixSig[kind] = null; });
-            lastBossSig = null;
-            db.ref('scoreboard').set(currentState);
-            alert("이전 상태로 되돌렸습니다.");
         }
 
         /* ================= 📈 그래프 (시작 ~ 종료, 10분 간격) =================
@@ -1220,7 +1200,6 @@
             if (!await askGraphPassword('▶ 그래프 시작')) return;
             if (!confirm('▶ 시작하면 모든 조의 게임·공통미션·WALL STREET 점수 입력값이 지워지고 0점에서 시작합니다.\n(각 표의 행 이름과 조 구성은 유지되며, 기존 그래프는 새로 그려집니다)\n\n시작할까요?')) return;
 
-            saveBackup();
             KIND_KEYS.forEach(kind => currentState[kind].forEach(r => { r.scores = {}; }));
             updateDB();
 
@@ -1559,7 +1538,6 @@
             const name = nameEl.value.trim();
             if (!name) return alert(`${K.rowLabel} 이름을 입력하세요.`);
 
-            saveBackup();
             currentState[kind].push({ id: String(Date.now()), name, scores: {} });
             nameEl.value = '';
             updateDB();
@@ -1576,7 +1554,6 @@
             const r = findRow(kind, id);
             if (!r) return;
             if (!confirm(`'${r.name}' ${KINDS[kind].rowLabel}과(와) 입력된 점수를 삭제하시겠습니까? (총점에서 자동 차감됩니다)`)) return;
-            saveBackup();
             currentState[kind] = currentState[kind].filter(x => String(x.id) !== String(id));
             updateDB();
         }
@@ -1591,7 +1568,6 @@
             const prev = r.scores[teamId];
             if ((v === '' && !hasValue(prev)) || (v !== '' && Number(v) === Number(prev) && hasValue(prev))) return;
 
-            saveBackup();
             if (v === '') delete r.scores[teamId];
             else r.scores[teamId] = Number(v);
             updateDB();
@@ -1658,19 +1634,9 @@
 
         function deleteTeam(id) {
             if (!confirm("해당 팀을 삭제하시겠습니까? (게임·공통미션·WALL STREET 점수 입력값도 함께 삭제됩니다)")) return;
-            saveBackup();
             currentState.teams = currentState.teams.filter(x => String(x.id) !== String(id));
             KIND_KEYS.forEach(kind => currentState[kind].forEach(r => { delete r.scores[id]; }));
             updateDB();
-        }
-
-        function resetData() {
-            if (!confirm("정말 모든 데이터를 기본값으로 초기화하시겠습니까?\n(점수표는 되돌리기로 복구할 수 있지만, 그래프 기록은 복구되지 않습니다)")) return;
-            saveBackup();
-            currentState = JSON.parse(JSON.stringify(defaultState));
-            KIND_KEYS.forEach(kind => { lastMatrixSig[kind] = null; });
-            updateDB();
-            db.ref('graph').remove();
         }
     </script>
 </body>
