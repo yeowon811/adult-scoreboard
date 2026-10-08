@@ -590,10 +590,12 @@
             }
         }
 
+        // 처음 위치로 되돌리고 멈춘 상태로 대기 (▶ 재생을 눌러야 시작)
         function restart() {
+            playing = false;
+            cancelAnimationFrame(rafId);
             restartPosition();
             draw();
-            play();
         }
 
         // 전체 보기도 💸 버튼 전이면 투자 반영 직전까지만
