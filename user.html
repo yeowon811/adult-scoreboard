@@ -690,7 +690,9 @@
                 if (!btn || !status) return;
                 const used = mine[key] && mine[key].used;
                 btn.disabled = !!used;
-                status.textContent = used ? `사용 완료 ${formatTime(mine[key].timestamp)}` : '사용 가능';
+                status.textContent = !used ? '사용 가능'
+                    : mine[key].consumed ? `적용 완료 ${formatTime(mine[key].consumedAt || mine[key].timestamp)}`
+                    : `사용 완료 ${formatTime(mine[key].timestamp)}`;
             });
         }
 
@@ -806,7 +808,7 @@
                 <div class="invest-entry">
                     <div class="invest-entry-main">
                         <span class="invest-chip ${isProfit ? 'profit' : 'loss'}">${isProfit ? '이익' : '손실'}</span>
-                        <span class="invest-time">${formatTime(e.timestamp)}</span>
+                        <span class="invest-time">${formatTime(e.timestamp)}${e.memo ? ' · ' + escapeHtml(e.memo) : ''}</span>
                     </div>
                     <span class="invest-amount ${isProfit ? 'pos' : 'neg'}">${isProfit ? '+' : '-'}${amount.toLocaleString()}</span>
                 </div>`;
