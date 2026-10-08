@@ -255,6 +255,135 @@
             border-color: rgba(250, 204, 21, 0.45);
         }
 
+        /* ================= ⚔️ WALL STREET 대결 입력 ================= */
+        .duel-form {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .duel-side {
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+            .duel-side.win {
+                border-color: var(--gold);
+                background: rgba(245, 158, 11, 0.08);
+            }
+
+            .duel-side select {
+                width: 100%;
+                font-weight: 700;
+            }
+
+        .duel-mid {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .duel-vs {
+            font-weight: 900;
+            color: var(--gold);
+            font-size: 1.2rem;
+        }
+
+        #duel-bet {
+            width: 120px;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .duel-item {
+            font-size: 0.85rem;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px dashed var(--card-border);
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+            .duel-item.on {
+                border-style: solid;
+                border-color: var(--boss);
+                color: #f9a8d4;
+                background: rgba(244, 114, 182, 0.1);
+            }
+
+        .duel-win {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .duel-side.win .duel-win {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: #1c1917;
+        }
+
+        .duel-preview {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        .duel-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .duel-log {
+            margin-top: 14px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .duel-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-left: 3px solid var(--gold);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            font-size: 0.88rem;
+        }
+
+        .duel-entry-sub {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 640px) {
+            .duel-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .boss-input {
             border-color: #7f1d1d;
             background: #1c0f14;
@@ -348,6 +477,18 @@
 
         .item-chip.used .item-chip-status {
             color: #f9a8d4;
+        }
+
+        .item-chip.consumed {
+            border-style: dashed;
+            background: transparent;
+            opacity: 0.6;
+        }
+
+        .inv-entry-memo {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            margin-left: 6px;
         }
 
         .item-reset {
@@ -578,7 +719,7 @@
     <div id="admin-lock">
         <div class="card" style="text-align: center; width: 320px;">
             <h2 style="margin-bottom: 15px;">🔒 관리자 인증</h2>
-            <input type="password" id="pin-input" placeholder="비밀번호 입력 (기본: 1234)" style="width: 100%; margin-bottom: 10px;" onkeydown="if(event.key==='Enter') unlockAdmin()">
+            <input type="password" id="pin-input" placeholder="비밀번호 입력" style="width: 100%; margin-bottom: 10px;" onkeydown="if(event.key==='Enter') unlockAdmin()">
             <button class="btn" style="width: 100%;" onclick="unlockAdmin()">입장하기</button>
         </div>
     </div>
@@ -622,17 +763,45 @@
             <div id="matrix-missions" class="matrix-wrap"></div>
         </div>
 
-        <!-- 2-1. 💹 WALL STREET 점수 입력표 (행: 항목 / 열: 조) -->
+        <!-- 2-1. ⚔️ WALL STREET 대결 입력 (조 2개 선택 → 건 점수 → 이긴 조) -->
+        <div class="card wallstreet-card">
+            <h3>⚔️ WALL STREET 대결 입력</h3>
+            <p class="card-desc">
+                * 두 조를 고르고 건 점수와 이긴 조를 선택한 뒤 <strong>대결 기록</strong>을 누르면, 이긴 조 +점수 / 진 조 −점수가 아래 표의 첫 행(WALL STREET 1)에 누적됩니다.<br>
+                * 각 조 부장이 마지막으로 사용한 아이템이 자동 적용되어 💸 투자내역에 추가됩니다. (총점에는 영향 없음) 기록 후 그 조의 사용한 아이템은 모두 '적용 완료'되어 다음 판에는 적용되지 않습니다.<br>
+                * 🛡️ 손실방어: 지면 잃은 점수만큼 이익 / ✖️ x2: 이기면 얻은 점수 ×1 이익, 지면 잃은 점수 ×1 손실 / 🔥 x3: ×2<br>
+                * 대결 기록을 삭제하면 점수·투자내역·아이템 적용 상태가 모두 되돌아갑니다.
+            </p>
+            <div class="duel-form">
+                <div class="duel-side" id="duel-side-a">
+                    <select id="duel-team-a" onchange="renderDuelForm()"></select>
+                    <div class="duel-item" id="duel-item-a"></div>
+                    <button class="duel-win" onclick="pickDuelWinner('a')">🏆 승리</button>
+                </div>
+                <div class="duel-mid">
+                    <span class="duel-vs">VS</span>
+                    <input type="number" id="duel-bet" placeholder="건 점수" min="0" step="any" oninput="renderDuelPreview()" onkeydown="if(event.key==='Enter') submitDuel()">
+                </div>
+                <div class="duel-side" id="duel-side-b">
+                    <select id="duel-team-b" onchange="renderDuelForm()"></select>
+                    <div class="duel-item" id="duel-item-b"></div>
+                    <button class="duel-win" onclick="pickDuelWinner('b')">🏆 승리</button>
+                </div>
+            </div>
+            <div id="duel-preview" class="duel-preview">-</div>
+            <div class="duel-actions">
+                <button class="btn btn-invest" onclick="submitDuel()">⚔️ 대결 기록</button>
+            </div>
+            <div id="duel-log" class="duel-log"></div>
+        </div>
+
+        <!-- 2-2. 💹 WALL STREET 점수 입력표 (행: 항목 / 열: 조) -->
         <div class="card wallstreet-card">
             <h3>💹 WALL STREET 점수 입력표</h3>
             <p class="card-desc">
                 * WALL STREET 점수도 게임·공통미션 점수와 함께 조별 총점에 합산되고, 현황판(user)에 따로 표시됩니다.<br>
-                * 감점은 음수(예: -30)로 입력하세요. Enter: 아래 칸 / Shift+Enter: 위 칸 이동
+                * 위의 ⚔️ 대결 입력 결과가 첫 행에 자동 누적됩니다. 직접 고칠 때는 감점을 음수(예: -30)로 입력하세요. Enter: 아래 칸 / Shift+Enter: 위 칸 이동
             </p>
-            <div class="add-row-bar">
-                <input type="text" id="new-wallstreet-name" placeholder="새 WALL STREET 항목 이름 (예: 1라운드)" style="flex: 2; min-width: 160px;" onkeydown="if(event.key==='Enter') addRow('wallstreet')">
-                <button class="btn btn-success" onclick="addRow('wallstreet')">＋ 항목 추가</button>
-            </div>
             <div id="matrix-wallstreet" class="matrix-wrap"></div>
         </div>
 
@@ -643,7 +812,7 @@
                     <h3>👔 부장 아이템 & 💸 투자내역</h3>
                     <p class="card-desc">
                         * 부장이 누른 아이템(손실방어 / x2 / x3)을 초기화하면 해당 조가 다시 사용할 수 있습니다.<br>
-                        * 투자내역은 왼쪽에서 <span class="pos">이익</span> / <span class="neg">손실</span>을 고르고 금액을 입력하세요. 총 금액(이익 − 손실)이 위에 표시되고, 해당 조 부장 화면에도 바로 표시됩니다.
+                        * 투자내역은 ⚔️ WALL STREET 대결 입력에서 아이템 효과로 자동 추가됩니다. 총 금액(이익 − 손실)이 위에 표시되고, 해당 조 부장 화면에도 바로 표시됩니다.
                     </p>
                 </div>
                 <button class="btn btn-danger" onclick="resetAllItems()">🔄 전체 조 아이템 초기화</button>
@@ -981,7 +1150,7 @@
         let latestInvestments = {};
         let lastBossSig = null;
 
-        db.ref('items').on('value', snap => { latestItems = snap.val() || {}; renderBossPanels(); });
+        db.ref('items').on('value', snap => { latestItems = snap.val() || {}; renderBossPanels(); renderDuelForm(); });
         db.ref('investments').on('value', snap => { latestInvestments = snap.val() || {}; renderBossPanels(); });
 
         function invType(e) {
@@ -1021,15 +1190,6 @@
                                     <span class="inv-total zero" data-inv-total>총 금액 0</span>
                                 </div>
                                 <div class="inv-breakdown" data-inv-breakdown>이익 +0 · 손실 -0</div>
-                                <div class="inv-form">
-                                    <select class="inv-type profit" data-inv-type onchange="this.className = 'inv-type ' + this.value">
-                                        <option value="profit">이익</option>
-                                        <option value="loss">손실</option>
-                                    </select>
-                                    <input type="number" placeholder="금액" data-inv-amount style="flex: 1;"
-                                           onkeydown="if(event.key==='Enter') addInvestment('${t.id}')">
-                                    <button class="btn btn-sm" onclick="addInvestment('${t.id}')">입력</button>
-                                </div>
                                 <div data-inv-list></div>
                             </div>
                         </div>`).join('');
@@ -1041,12 +1201,18 @@
 
                 // 아이템 현황
                 const mine = latestItems[t.id] || {};
+                const active = activeItemOf(t.id);
                 panel.querySelector('[data-items]').innerHTML = Object.entries(ITEMS).map(([key, it]) => {
                     const used = mine[key] && mine[key].used;
+                    const consumed = used && mine[key].consumed;
+                    const status = !used ? '미사용'
+                        : consumed ? '✔ 적용 완료'
+                        : active && active.key === key ? `사용 ${shortTime(mine[key].timestamp)} · 다음 판 적용`
+                        : `사용 ${shortTime(mine[key].timestamp)}`;
                     return `
-                        <div class="item-chip ${used ? 'used' : ''}">
+                        <div class="item-chip ${used ? 'used' : ''} ${consumed ? 'consumed' : ''}">
                             <span class="item-chip-label">${it.icon} ${it.label}</span>
-                            <span class="item-chip-status">${used ? `사용 ${shortTime(mine[key].timestamp)}` : '미사용'}</span>
+                            <span class="item-chip-status">${status}</span>
                             ${used ? `<button class="item-reset" onclick="resetItem('${t.id}', '${key}')">초기화</button>` : ''}
                         </div>`;
                 }).join('');
@@ -1070,6 +1236,7 @@
                             <span>
                                 <span class="inv-chip ${type}">${type === 'profit' ? '이익' : '손실'}</span>
                                 <span class="inv-entry-time">${shortTime(e.timestamp)}</span>
+                                ${e.memo ? `<span class="inv-entry-memo">${escapeHtml(e.memo)}</span>` : ''}
                             </span>
                             <span style="display: flex; align-items: center; gap: 6px;">
                                 <span class="inv-entry-amount ${type === 'profit' ? 'pos' : 'neg'}">${type === 'profit' ? '+' : '-'}${amount.toLocaleString()}</span>
@@ -1100,26 +1267,268 @@
             db.ref('items').remove();
         }
 
-        function addInvestment(teamId) {
-            const panel = document.querySelector(`[data-boss="${CSS.escape(String(teamId))}"]`);
-            if (!panel) return;
-            const typeEl = panel.querySelector('[data-inv-type]');
-            const amountEl = panel.querySelector('[data-inv-amount]');
-            const amount = Math.abs(Number(amountEl.value));
-            if (!amountEl.value.trim() || isNaN(amount) || amount === 0) return alert('금액을 숫자로 입력하세요.');
-
-            db.ref(`investments/${teamId}`).push({
-                type: typeEl.value === 'profit' ? 'profit' : 'loss',
-                amount,
-                timestamp: Date.now()
-            });
-            amountEl.value = '';
-            amountEl.focus();
-        }
-
         function deleteInvestment(teamId, key) {
             if (!confirm('이 투자내역을 삭제할까요?')) return;
             db.ref(`investments/${teamId}/${key}`).remove();
+        }
+
+        /* ================= ⚔️ WALL STREET 대결 입력 =================
+           최상위 경로 wsMatches/{자동키} = {
+             bet, winner, loser, winnerName, loserName, rowId, timestamp,
+             sides: [{ teamId, name, won, item, consumed: [아이템키...], invest, investKey }]
+           }
+           - 점수: 이긴 조 +bet / 진 조 −bet → WALL STREET 첫 행(rowId)에 누적 (총점에 반영)
+           - 아이템: 각 조의 '사용했지만 아직 적용 안 된' 아이템 중 마지막 것 1개만 효과 적용,
+                     그 조의 미적용 아이템은 모두 consumed 처리 (items/{조id}/{키}/consumed, consumedBy)
+           - 투자내역: 아이템 효과만큼 investments/{조id} 에 추가 (총점에는 영향 없음) */
+
+        // 효과 = 건 점수 × 배수 (양수: 이익, 음수: 손실)
+        const DUEL_EFFECT = {
+            defense: { win: 0, lose: 1 },
+            x2: { win: 1, lose: -1 },
+            x3: { win: 2, lose: -2 }
+        };
+        let latestMatches = {};
+        let duelWinner = null;   // 'a' | 'b' | null
+        let lastDuelTeamSig = null;
+
+        db.ref('wsMatches').on('value', snap => { latestMatches = snap.val() || {}; renderDuelLog(); });
+
+        // 사용했지만 아직 대결에 적용되지 않은 아이템 (오래된 순)
+        function pendingItemsOf(teamId) {
+            return Object.entries(latestItems[teamId] || {})
+                .filter(([key, v]) => ITEMS[key] && v && v.used && !v.consumed)
+                .map(([key, v]) => ({ key, ...v }))
+                .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        }
+
+        // 다음 대결에 적용될 아이템 = 가장 마지막으로 사용한 미적용 아이템
+        function activeItemOf(teamId) {
+            const pending = pendingItemsOf(teamId);
+            return pending.length ? pending[pending.length - 1] : null;
+        }
+
+        function itemInvestDelta(key, won, bet) {
+            const e = DUEL_EFFECT[key];
+            if (!e) return 0;
+            return Math.round((won ? e.win : e.lose) * bet * 100) / 100;
+        }
+
+        function itemName(key) {
+            return ITEMS[key] ? `${ITEMS[key].icon} ${ITEMS[key].label}` : '';
+        }
+
+        function duelSelection() {
+            const aId = document.getElementById('duel-team-a').value;
+            const bId = document.getElementById('duel-team-b').value;
+            const bet = Number(document.getElementById('duel-bet').value);
+            return { aId, bId, bet };
+        }
+
+        function pickDuelWinner(side) {
+            duelWinner = duelWinner === side ? null : side;
+            renderDuelForm();
+        }
+
+        // 조 선택 목록 + 각 조에 적용될 아이템 표시
+        function renderDuelForm() {
+            if (!currentState) return;
+            const teams = currentState.teams || [];
+            const selA = document.getElementById('duel-team-a');
+            const selB = document.getElementById('duel-team-b');
+            const sig = JSON.stringify(teams.map(t => [t.id, t.name]));
+
+            if (sig !== lastDuelTeamSig) {
+                lastDuelTeamSig = sig;
+                const prevA = selA.value, prevB = selB.value;
+                const options = '<option value="">조 선택</option>' +
+                    teams.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join('');
+                selA.innerHTML = options;
+                selB.innerHTML = options;
+                const exists = id => teams.some(t => String(t.id) === id);
+                selA.value = exists(prevA) ? prevA : (teams[0] ? String(teams[0].id) : '');
+                selB.value = exists(prevB) ? prevB : (teams[1] ? String(teams[1].id) : '');
+            }
+
+            ['a', 'b'].forEach(side => {
+                const teamId = document.getElementById('duel-team-' + side).value;
+                const box = document.getElementById('duel-item-' + side);
+                const active = teamId ? activeItemOf(teamId) : null;
+                box.className = 'duel-item' + (active ? ' on' : '');
+                box.innerHTML = !teamId ? '-'
+                    : active ? `👔 적용 아이템: <strong>${itemName(active.key)}</strong><br><span style="font-size: 0.75rem;">사용 ${shortTime(active.timestamp)}</span>`
+                    : '적용할 아이템 없음';
+                document.getElementById('duel-side-' + side).classList.toggle('win', duelWinner === side);
+            });
+
+            renderDuelPreview();
+        }
+
+        // 대결 결과 미리보기 (점수 변화 + 투자내역 변화)
+        function renderDuelPreview() {
+            const el = document.getElementById('duel-preview');
+            if (!el || !currentState) return;
+            const { aId, bId, bet } = duelSelection();
+
+            if (!aId || !bId) return void (el.textContent = '두 조를 선택하세요.');
+            if (aId === bId) return void (el.innerHTML = '<span class="neg">서로 다른 두 조를 선택하세요.</span>');
+            if (!(bet > 0)) return void (el.textContent = '건 점수를 입력하세요.');
+            if (!duelWinner) return void (el.textContent = '이긴 조의 🏆 승리 버튼을 누르세요.');
+
+            const winId = duelWinner === 'a' ? aId : bId;
+            const loseId = duelWinner === 'a' ? bId : aId;
+            const invLines = [[winId, true], [loseId, false]].map(([id, won]) => {
+                const active = activeItemOf(id);
+                if (!active) return `${escapeHtml(teamNameOf(id))}: 아이템 없음`;
+                const d = itemInvestDelta(active.key, won, bet);
+                return `${escapeHtml(teamNameOf(id))}: ${itemName(active.key)} → ` +
+                    (d === 0 ? '<span class="zero">효과 없음</span>'
+                        : `<span class="${toneClass(d)}">${d > 0 ? '이익' : '손실'} ${signed(d)}</span>`);
+            });
+
+            el.innerHTML =
+                `🏆 점수(WALL STREET 1): <strong>${escapeHtml(teamNameOf(winId))}</strong> <span class="pos">+${fmt(bet)}</span> · ` +
+                `<strong>${escapeHtml(teamNameOf(loseId))}</strong> <span class="neg">-${fmt(bet)}</span><br>` +
+                `💸 투자내역: ${invLines.join(' · ')}`;
+        }
+
+        function addToCell(row, teamId, delta) {
+            const prev = hasValue(row.scores[teamId]) ? Number(row.scores[teamId]) : 0;
+            row.scores[teamId] = Math.round((prev + delta) * 100) / 100;
+        }
+
+        function submitDuel() {
+            if (!currentState) return;
+            const { aId, bId, bet } = duelSelection();
+            if (!aId || !bId) return alert('두 조를 선택하세요.');
+            if (aId === bId) return alert('서로 다른 두 조를 선택하세요.');
+            if (!(bet > 0)) return alert('건 점수를 0보다 큰 숫자로 입력하세요.');
+            if (!duelWinner) return alert('이긴 조를 선택하세요.');
+
+            const winId = duelWinner === 'a' ? aId : bId;
+            const loseId = duelWinner === 'a' ? bId : aId;
+            const plainPreview = document.getElementById('duel-preview').innerText;
+            if (!confirm(`⚔️ 대결 결과를 기록할까요?\n\n${plainPreview}`)) return;
+
+            // 점수가 누적될 WALL STREET 첫 행 (없으면 생성)
+            let row = currentState.wallstreet[0];
+            if (!row) {
+                row = { id: String(Date.now()), name: 'WALL STREET 1', scores: {} };
+                currentState.wallstreet.push(row);
+            }
+
+            const now = Date.now();
+            const matchId = db.ref('wsMatches').push().key;
+            const updates = {};
+            const sides = [[winId, true], [loseId, false]].map(([teamId, won]) => {
+                const pending = pendingItemsOf(teamId);
+                const active = pending.length ? pending[pending.length - 1] : null;
+                const invest = active ? itemInvestDelta(active.key, won, bet) : 0;
+
+                // 이 조의 미적용 아이템은 모두 적용 완료 (마지막 것만 효과, 나머지는 소멸)
+                pending.forEach(p => {
+                    updates[`items/${teamId}/${p.key}/consumed`] = true;
+                    updates[`items/${teamId}/${p.key}/consumedBy`] = matchId;
+                    updates[`items/${teamId}/${p.key}/consumedAt`] = now;
+                });
+
+                let investKey = null;
+                if (invest !== 0) {
+                    investKey = db.ref(`investments/${teamId}`).push().key;
+                    updates[`investments/${teamId}/${investKey}`] = {
+                        type: invest > 0 ? 'profit' : 'loss',
+                        amount: Math.abs(invest),
+                        timestamp: now,
+                        source: 'wallstreet',
+                        matchId,
+                        memo: `⚔️ ${ITEMS[active.key].label} (${won ? '승' : '패'})`
+                    };
+                }
+                return {
+                    teamId, name: teamNameOf(teamId), won,
+                    item: active ? active.key : null,
+                    consumed: pending.map(p => p.key),
+                    invest, investKey
+                };
+            });
+
+            updates[`wsMatches/${matchId}`] = {
+                bet, winner: winId, loser: loseId,
+                winnerName: teamNameOf(winId), loserName: teamNameOf(loseId),
+                rowId: row.id, timestamp: now, sides
+            };
+            db.ref().update(updates);
+
+            addToCell(row, winId, bet);
+            addToCell(row, loseId, -bet);
+            updateDB();
+
+            duelWinner = null;
+            document.getElementById('duel-bet').value = '';
+            renderDuelForm();
+        }
+
+        // 대결 기록 삭제 → 점수·투자내역·아이템 적용 상태 되돌리기
+        function deleteDuel(matchId) {
+            const m = latestMatches[matchId];
+            if (!m || !currentState) return;
+            if (!confirm(`'${m.winnerName} 🏆 vs ${m.loserName}' (${fmt(m.bet)}점) 대결 기록을 삭제할까요?\n점수·투자내역·아이템 적용 상태가 모두 되돌아갑니다.`)) return;
+
+            const updates = { [`wsMatches/${matchId}`]: null };
+            const sides = toArray(m.sides);
+            sides.forEach(s => {
+                if (s.investKey) updates[`investments/${s.teamId}/${s.investKey}`] = null;
+                toArray(s.consumed).forEach(key => {
+                    const it = (latestItems[s.teamId] || {})[key];
+                    // 관리자가 초기화했거나 다른 대결에서 적용된 아이템은 건드리지 않음
+                    if (it && it.used && it.consumedBy === matchId) {
+                        updates[`items/${s.teamId}/${key}/consumed`] = null;
+                        updates[`items/${s.teamId}/${key}/consumedBy`] = null;
+                        updates[`items/${s.teamId}/${key}/consumedAt`] = null;
+                    }
+                });
+            });
+            db.ref().update(updates);
+
+            const row = findRow('wallstreet', m.rowId);
+            if (row) {
+                sides.forEach(s => addToCell(row, s.teamId, s.won ? -m.bet : m.bet));
+                updateDB();
+            } else {
+                alert('점수가 기록된 WALL STREET 행이 이미 삭제되어 점수는 되돌리지 못했습니다.');
+            }
+        }
+
+        function renderDuelLog() {
+            const el = document.getElementById('duel-log');
+            if (!el) return;
+            const list = Object.entries(latestMatches)
+                .map(([key, v]) => ({ _key: key, ...v }))
+                .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            if (list.length === 0) {
+                el.innerHTML = '<div class="empty-msg" style="padding: 10px;">아직 대결 기록이 없습니다.</div>';
+                return;
+            }
+            el.innerHTML = list.map(m => {
+                const effects = toArray(m.sides).filter(s => s.item).map(s => {
+                    const d = Number(s.invest) || 0;
+                    return `${escapeHtml(s.name)} ${itemName(s.item)} ` +
+                        (d === 0 ? '효과 없음' : `<span class="${toneClass(d)}">${d > 0 ? '이익' : '손실'} ${signed(d)}</span>`);
+                });
+                return `
+                    <div class="duel-entry">
+                        <div>
+                            <div>
+                                <span class="inv-entry-time" style="margin: 0 6px 0 0;">${shortTime(m.timestamp)}</span>
+                                <strong>${escapeHtml(m.winnerName)}</strong> 🏆 <span class="pos">+${fmt(m.bet)}</span>
+                                vs <strong>${escapeHtml(m.loserName)}</strong> <span class="neg">-${fmt(m.bet)}</span>
+                            </div>
+                            <div class="duel-entry-sub">💸 ${effects.length ? effects.join(' · ') : '적용된 아이템 없음'}</div>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteDuel('${m._key}')">삭제</button>
+                    </div>`;
+            }).join('');
         }
 
         /* ================= 저장 ================= */
@@ -1172,7 +1581,7 @@
             db.ref('graph/points/' + key).transaction(cur => cur ? undefined : point, () => { pendingPointKey = null; });
         }
 
-        // 그래프 ▶ 시작 / ⏹ 종료 / 💸 투자내역 반영 / 점수표 행 삭제 전용 비밀번호 (관리자 입장 비밀번호와 별개로 바꿀 수 있음)
+        // 그래프 ▶ 시작 / ⏹ 종료 / 💸 투자내역 반영 / 점수표 행 추가·삭제 전용 비밀번호 (관리자 입장 비밀번호와 별개로 바꿀 수 있음)
         const CONTROL_PASSWORD = '1234';
 
         // 비밀번호 입력 창 → 맞으면 true, 취소하거나 틀리면 false
@@ -1211,13 +1620,14 @@
             if (!currentState) return;
             if (graphState.running) return alert('이미 진행 중입니다. 먼저 종료하세요.');
             if (!await askControlPassword('▶ 그래프 시작')) return;
-            if (!confirm('▶ 시작하면 아래 내용이 모두 지워지고 0점에서 시작합니다.\n· 모든 조의 게임·공통미션·WALL STREET 점수 입력값\n· 모든 조의 💸 투자내역\n· 모든 조의 👔 부장 아이템 사용 기록\n· 📩 제보 타임라인\n(각 표의 행 이름과 조 구성은 유지되며, 기존 그래프는 새로 그려집니다)\n\n시작할까요?')) return;
+            if (!confirm('▶ 시작하면 아래 내용이 모두 지워지고 0점에서 시작합니다.\n· 모든 조의 게임·공통미션·WALL STREET 점수 입력값\n· 모든 조의 💸 투자내역\n· 모든 조의 👔 부장 아이템 사용 기록\n· 📩 제보 타임라인\n· ⚔️ WALL STREET 대결 기록\n(각 표의 행 이름과 조 구성은 유지되며, 기존 그래프는 새로 그려집니다)\n\n시작할까요?')) return;
 
             KIND_KEYS.forEach(kind => currentState[kind].forEach(r => { r.scores = {}; }));
             updateDB();
             db.ref('investments').remove();
             db.ref('items').remove();
             db.ref('reports').remove();
+            db.ref('wsMatches').remove();
 
             const now = Date.now();
             const zero = {};
@@ -1420,7 +1830,9 @@
             // 2. 게임 / 공통미션 / WALL STREET 점수 입력표
             KIND_KEYS.forEach(kind => renderMatrix(kind));
 
-            // 3. 부장 아이템 & 투자내역
+            // 3. WALL STREET 대결 입력 + 부장 아이템 & 투자내역
+            renderDuelForm();
+            renderDuelLog();
             renderBossPanels();
 
             // 4. 팀 관리 테이블
@@ -1533,6 +1945,12 @@
             });
         }
 
+        // 숫자 칸에 포커스가 있을 때 마우스 휠로 값이 바뀌지 않도록: 휠을 굴리면 포커스를 빼고 페이지만 스크롤
+        document.addEventListener('wheel', e => {
+            const el = document.activeElement;
+            if (el && el.type === 'number' && el.contains(e.target)) el.blur();
+        }, { passive: true });
+
         // Enter: 아래 칸 / Shift+Enter: 위 칸 (같은 표, 같은 조 열)
         function cellKey(e, el) {
             if (e.key !== 'Enter') return;
@@ -1550,12 +1968,13 @@
             return currentState[kind].find(r => String(r.id) === String(id));
         }
 
-        function addRow(kind) {
+        async function addRow(kind) {
             if (!currentState) return;
             const K = KINDS[kind];
             const nameEl = document.getElementById(K.inputId);
             const name = nameEl.value.trim();
             if (!name) return alert(`${K.rowLabel} 이름을 입력하세요.`);
+            if (!await askControlPassword(`＋ ${K.rowLabel} 추가`)) return;
 
             currentState[kind].push({ id: String(Date.now()), name, scores: {} });
             nameEl.value = '';
