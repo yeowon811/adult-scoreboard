@@ -207,6 +207,21 @@
             color: var(--text-muted);
         }
 
+        .score-updated {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+            .score-updated strong {
+                color: var(--gold-light);
+            }
+
         /* ================= 📮 보고 (부장 전용) ================= */
         .boss-card {
             border-color: rgba(244, 114, 182, 0.45);
@@ -532,6 +547,7 @@
             <div class="my-team-score" id="my-team-score">0 P</div>
             <div class="my-team-breakdown" id="my-team-breakdown">-</div>
             <div class="my-team-note">* 다른 조의 점수와 순위는 공개되지 않습니다.</div>
+            <div class="score-updated" id="score-updated">-</div>
         </div>
 
         <!-- 🎮 게임별 우리 조 점수 -->
@@ -674,23 +690,58 @@
             return null;
         }
 
-        db.ref('scoreboard').on('value', (snapshot) => {
-            const state = snapshot.val();
-            latestState = state;
+        // scoreboard: 로그인(조 코드)·조 이름 확인용 실시간 데이터
+        // published: 관리자 화면이 ▶ 시작 / 10분마다 / ⏹ 종료 시점에 공개한 점수 → 점수 표시는 이것만 사용
+        let latestPublished = null;
+        let latestGraph = {};
 
+        function rerender() {
             if (!loggedInTeamId) {
                 showLockScreen();
                 return;
             }
-
-            const teams = toArray(state && state.teams);
-            if (state && teams.some(t => String(t.id) === String(loggedInTeamId))) {
-                render(state);
+            const teams = toArray(latestState && latestState.teams);
+            if (latestState && teams.some(t => String(t.id) === String(loggedInTeamId))) {
+                render(latestState);
             } else {
                 // 로그인했던 조가 삭제된 경우 등 → 다시 잠금
                 logoutUser();
             }
+        }
+
+        db.ref('scoreboard').on('value', (snapshot) => {
+            latestState = snapshot.val();
+            rerender();
         });
+
+        db.ref('published').on('value', (snapshot) => {
+            latestPublished = snapshot.val();
+            if (loggedInTeamId && latestState) rerender();
+        });
+
+        db.ref('graph').on('value', (snapshot) => {
+            latestGraph = snapshot.val() || {};
+            renderUpdatedLabel();
+            if (loggedInTeamId && latestState) rerender();   // 순위 비공개 전환 즉시 반영
+        });
+
+        // 다음 업데이트까지 남은 시간 (관리자 화면과 같은 10분 주기)
+        const UPDATE_INTERVAL = 10 * 60 * 1000;
+        setInterval(renderUpdatedLabel, 1000);
+
+        function renderUpdatedLabel() {
+            const el = document.getElementById('score-updated');
+            if (!el) return;
+            const pad = n => String(n).padStart(2, '0');
+            // 진행 중일 때만 남은 시간 표시, 그 외에는 숨김
+            if (!(latestGraph.running && latestGraph.startedAt)) {
+                el.style.display = 'none';
+                return;
+            }
+            const s = Math.ceil((UPDATE_INTERVAL - ((Date.now() - latestGraph.startedAt) % UPDATE_INTERVAL)) / 1000);
+            el.style.display = '';
+            el.innerHTML = `🕒 다음 업데이트까지 <strong>${pad(Math.floor(s / 60))}:${pad(s % 60)}</strong>`;
+        }
 
         // ================= 🎁 아이템(손실방어 / x2 / x3) =================
         // 사용 여부는 scoreboard와 별도의 최상위 경로에 저장한다.
@@ -991,10 +1042,16 @@
         }
 
         function render(state) {
+            // 조 목록·이름은 실시간, 점수(총점·순위·세부 점수)는 마지막 공개 점수 사용
+            // (아직 공개된 적 없거나 공개 이후 추가된 조는 0점)
             const rawTeams = toArray(state.teams);
-            const games = toArray(state.games);
-            const missions = toArray(state.missions);
-            const wallstreet = toArray(state.wallstreet);
+            const pub = latestPublished || {};
+            const pubScore = {};
+            toArray(pub.teams).forEach(t => { pubScore[String(t.id)] = Number(t.score) || 0; });
+            const scoreOf = t => pubScore[String(t.id)] ?? 0;
+            const games = toArray(pub.games);
+            const missions = toArray(pub.missions);
+            const wallstreet = toArray(pub.wallstreet);
 
             const myTeam = rawTeams.find(t => String(t.id) === String(loggedInTeamId));
             if (!myTeam) {
@@ -1004,7 +1061,7 @@
             const myId = String(myTeam.id);
 
             // 전체 순위는 내부 계산만 하고, 본인 조 순위 숫자만 노출
-            const sortedTeams = [...rawTeams].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+            const sortedTeams = [...rawTeams].sort((a, b) => scoreOf(b) - scoreOf(a));
             const myRank = sortedTeams.findIndex(t => String(t.id) === myId) + 1;
             const totalTeams = sortedTeams.length;
             const medal = myRank === 1 ? '🥇' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : '🎯';
@@ -1013,10 +1070,13 @@
             const missionSum = sumMine(missions, myId);
             const wallstreetSum = sumMine(wallstreet, myId);
 
-            document.getElementById('my-team-medal').textContent = medal;
+            // 관리자가 🔒 30분을 누른 뒤에는 순위(몇 위·메달)를 숨김 (점수는 계속 표시)
+            const rankHidden = !!latestGraph.rankHidden;
+            document.getElementById('my-team-medal').textContent = rankHidden ? '🔒' : medal;
             document.getElementById('my-team-name').textContent = myTeam.name || '미등록';
-            document.getElementById('my-team-rank').textContent = `전체 ${totalTeams}개 조 중 ${myRank}위`;
-            document.getElementById('my-team-score').textContent = `${fmt(myTeam.score)} P`;
+            document.getElementById('my-team-rank').textContent = rankHidden ? '순위 비공개' : `전체 ${totalTeams}개 조 중 ${myRank}위`;
+            document.getElementById('my-team-score').textContent = `${fmt(scoreOf(myTeam))} P`;
+            renderUpdatedLabel();
             document.getElementById('my-team-breakdown').innerHTML =
                 `🎮 게임 <strong>${fmt(gameSum)} P</strong> &nbsp;+&nbsp; 🤝 공통미션 <strong>${fmt(missionSum)} P</strong><br>+&nbsp; 💹 WALL STREET <strong>${fmt(wallstreetSum)} P</strong>`;
 
