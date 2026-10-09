@@ -239,6 +239,38 @@
             margin-bottom: 12px;
         }
 
+        /* 현재 적용 중인 아이템 안내 */
+        .active-item-box {
+            border: 1px dashed var(--card-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+            .active-item-box.on {
+                border-style: solid;
+                border-color: var(--boss);
+                background: rgba(244, 114, 182, 0.1);
+                color: var(--text);
+            }
+
+            .active-item-box .active-item-name {
+                font-weight: 900;
+                font-size: 1rem;
+                color: #f9a8d4;
+            }
+
+            .active-item-box .active-item-warn {
+                display: block;
+                margin-top: 4px;
+                font-size: 0.78rem;
+                color: var(--loss);
+            }
+
         /* 아이템 버튼 (손실방어 / x2 / x3) */
         .item-grid {
             display: grid;
@@ -537,6 +569,7 @@
             <div class="card boss-card" id="report-card" style="display: none;">
                 <h2>📮 관리자에게 보고</h2>
                 <p class="report-note">버튼을 누르면 관리자 화면으로 바로 전송돼요. 각 버튼은 한 번만 누를 수 있어요.</p>
+                <div class="active-item-box" id="active-item-box">현재 적용중인 아이템이 없습니다.</div>
                 <div class="item-grid">
                     <button class="item-btn" id="item-btn-defense" onclick="useItem('defense')">
                         <span class="item-icon">🛡️</span>
@@ -682,8 +715,27 @@
             return latestItems[loggedInTeamId] || {};
         }
 
+        // 현재 적용 중인 아이템 = 사용했지만 아직 대결에 적용되지 않은 아이템 중 가장 마지막 것
+        // (관리자 화면 ⚔️ WALL STREET 대결 입력과 같은 기준)
+        function getActiveItem() {
+            const mine = getMyItems();
+            const pending = Object.keys(ITEMS)
+                .filter(key => mine[key] && mine[key].used && !mine[key].consumed)
+                .sort((a, b) => (mine[a].timestamp || 0) - (mine[b].timestamp || 0));
+            return pending.length ? pending[pending.length - 1] : null;
+        }
+
         function renderItems() {
             const mine = getMyItems();
+            const box = document.getElementById('active-item-box');
+            const activeKey = getActiveItem();
+            if (box) {
+                box.className = 'active-item-box' + (activeKey ? ' on' : '');
+                box.innerHTML = activeKey
+                    ? `현재 <span class="active-item-name">${ITEMS[activeKey].icon} ${ITEMS[activeKey].label}</span> 아이템이 적용중입니다.` +
+                      `<span class="active-item-warn">⚠️ 만약 다른 아이템을 클릭할 시 이전 아이템은 복구 불가능합니다.</span>`
+                    : '현재 적용중인 아이템이 없습니다.';
+            }
             Object.keys(ITEMS).forEach(key => {
                 const btn = document.getElementById('item-btn-' + key);
                 const status = document.getElementById('item-status-' + key);
@@ -709,7 +761,11 @@
                 alert(`${item.label}은(는) 이미 사용했습니다.`);
                 return;
             }
-            if (!confirm(`${item.icon} ${item.label}을(를) 사용할까요?\n한 번 사용하면 다시 누를 수 없어요.`)) return;
+            const activeKey = getActiveItem();
+            const warn = activeKey
+                ? `\n\n⚠️ 현재 ${ITEMS[activeKey].icon} ${ITEMS[activeKey].label} 아이템이 적용중입니다.\n다른 아이템을 사용하면 ${ITEMS[activeKey].label}은(는) 복구할 수 없습니다.`
+                : '';
+            if (!confirm(`${item.icon} ${item.label}을(를) 사용할까요?\n한 번 사용하면 다시 누를 수 없어요.${warn}`)) return;
 
             const teamId = loggedInTeamId;
             const teamName = myTeamName || '';
