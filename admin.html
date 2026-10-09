@@ -696,6 +696,28 @@
             animation: blink 1.2s infinite;
         }
 
+        /* 제목 옆 10분 점수 공개 카운트다운 */
+        .publish-countdown {
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            background: #0f172a;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+            .publish-countdown.running {
+                border-color: var(--success);
+                color: var(--text);
+            }
+
+            .publish-countdown strong {
+                color: var(--gold);
+                font-size: 1.05rem;
+            }
+
         @keyframes blink {
             50% { opacity: 0.25; }
         }
@@ -726,7 +748,11 @@
 
     <div class="container">
         <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-            <h2>⚙️ 스코어보드 관리자 콘솔</h2>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <h2>⚙️ 스코어보드 관리자 콘솔</h2>
+                <span id="publish-countdown" class="publish-countdown">-</span>
+                <button class="btn btn-danger btn-sm" id="rank-hide-btn" onclick="toggleRankHidden()">🔒 순위 비공개</button>
+            </div>
         </header>
 
         <!-- 상단 실시간 모니터링 축약 뷰 -->
@@ -834,8 +860,19 @@
 
         <!-- 조 관리 -->
         <div class="card">
-            <h3>조(팀) 관리</h3>
-            <p class="card-desc">* 조마다 비밀번호 2개: <strong>조원 비밀번호</strong>(일반 조원 입장) / <strong class="boss-label">👔 부장 비밀번호</strong>(해당 조 부장 입장). 모든 비밀번호는 서로 겹치지 않아야 합니다.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3>조(팀) 관리</h3>
+                    <p class="card-desc">
+                        * 조마다 비밀번호 2개: <strong>조원 비밀번호</strong>(일반 조원 입장) / <strong class="boss-label">👔 부장 비밀번호</strong>(해당 조 부장 입장). 모든 비밀번호는 서로 겹치지 않아야 합니다.<br>
+                        * 조 이름·비밀번호를 바꾸려면 오른쪽 <strong>✏️ 수정</strong> → 비밀번호 입력 → 값 수정 → <strong>💾 수정 완료</strong>를 눌러야 저장됩니다.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-undo" id="team-edit-cancel-btn" onclick="cancelTeamEdit()" style="display: none;">취소</button>
+                    <button class="btn" id="team-edit-btn" onclick="toggleTeamEdit()">✏️ 수정</button>
+                </div>
+            </div>
             <div style="display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap;">
                 <input type="text" id="new-team-name" placeholder="신규 팀명" style="flex: 2; min-width: 100px;" onkeydown="if(event.key==='Enter') addTeam()">
                 <input type="text" id="new-team-password" placeholder="조원 비밀번호" style="flex: 1; min-width: 110px;" onkeydown="if(event.key==='Enter') addTeam()">
@@ -864,6 +901,7 @@
                     <p class="card-desc">
                         * <strong>시작</strong>을 누르면 점수 입력값·투자내역·부장 아이템·제보 타임라인이 모두 초기화되어 모든 조가 0점에서 출발하고, <strong>종료</strong>를 누를 때까지 10분마다 현재 총점이 그래프에 자동으로 이어서 기록됩니다.<br>
                         * 10분 기록은 관리자 화면이 열려 있을 때 저장됩니다. (화면을 닫아두었던 구간은 다시 열었을 때 그 시점 점수로 1개만 기록)<br>
+                        * 📢 현황판(user)의 점수는 시작 / 10분 기록 / 종료 시점에만 업데이트됩니다. (관리자 화면은 실시간)<br>
                         * <strong>종료</strong> 후 <strong>💸 투자내역 반영</strong>을 누르면 마지막 지점 점수에 각 조 투자 총 금액(이익 − 손실)을 더한 지점이 그래프 맨 끝에 추가됩니다. (그래프에만 표시, 총점은 그대로)
                     </p>
                 </div>
@@ -1181,7 +1219,6 @@
                         <div class="boss-panel" data-boss="${t.id}">
                             <div class="boss-panel-head">
                                 <span class="boss-panel-name">${escapeHtml(t.name)}</span>
-                                <button class="btn btn-undo btn-sm" onclick="resetTeamItems('${t.id}')">이 조 아이템 초기화</button>
                             </div>
                             <div class="item-row" data-items></div>
                             <div class="inv-box">
@@ -1257,12 +1294,8 @@
             db.ref(`items/${teamId}/${key}`).remove();
         }
 
-        function resetTeamItems(teamId) {
-            if (!confirm(`${teamNameOf(teamId)}의 아이템 3개를 모두 초기화할까요?`)) return;
-            db.ref(`items/${teamId}`).remove();
-        }
-
-        function resetAllItems() {
+        async function resetAllItems() {
+            if (!await askControlPassword('🔄 전체 조 아이템 초기화')) return;
             if (!confirm('모든 조의 아이템 사용 기록을 초기화할까요?')) return;
             db.ref('items').remove();
         }
@@ -1550,6 +1583,7 @@
 
         db.ref('graph').on('value', snap => {
             graphState = snap.val() || {};
+            renderRankHideButton();
             renderGraphControls();
             renderGraphStatus();
             renderChart();
@@ -1577,11 +1611,72 @@
             recalcTotals();
             const now = Date.now();
             const point = { k, t: now, label: shortTime(now), scores: currentScoresMap() };
-            // 관리자 화면이 여러 개 열려 있어도 같은 지점은 한 번만 기록
-            db.ref('graph/points/' + key).transaction(cur => cur ? undefined : point, () => { pendingPointKey = null; });
+            const snapshot = buildPublished(now, point.label);
+            // 관리자 화면이 여러 개 열려 있어도 같은 지점은 한 번만 기록 (기록한 화면만 점수 공개)
+            db.ref('graph/points/' + key).transaction(cur => cur ? undefined : point, (error, committed) => {
+                pendingPointKey = null;
+                if (!error && committed) db.ref('published').set(snapshot);
+            });
         }
 
-        // 그래프 ▶ 시작 / ⏹ 종료 / 💸 투자내역 반영 / 점수표 행 추가·삭제 전용 비밀번호 (관리자 입장 비밀번호와 별개로 바꿀 수 있음)
+        /* ================= 📢 점수 공개 (10분 단위) =================
+           최상위 경로 published = { at, label, teams: [{ id, name, score }], games, missions, wallstreet }
+           user.html은 실시간 scoreboard 대신 이 값을 보여줌.
+           ▶ 시작(0점) / 10분 지점마다 / ⏹ 종료 시점에만 갱신되고, 그 외에는 마지막 공개 점수 유지 */
+        function buildPublished(at, label) {
+            const rows = kind => (currentState[kind] || []).map(r => ({ id: r.id, name: r.name, scores: { ...r.scores } }));
+            return {
+                at,
+                label,
+                teams: currentState.teams.map(t => ({ id: t.id, name: t.name, score: Number(t.score) || 0 })),
+                games: rows('games'),
+                missions: rows('missions'),
+                wallstreet: rows('wallstreet')
+            };
+        }
+
+        const mmss = ms => {
+            const s = Math.max(0, Math.ceil(ms / 1000));
+            return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+        };
+
+        /* 🔒 순위 비공개: 누르면 user.html에서 순위(몇 위·메달)를 숨김. 점수 공개(10분 단위)는 그대로 계속.
+           graph/rankHidden 에 저장 → ▶ 시작으로 그래프를 새로 만들면 자동 해제 */
+        async function toggleRankHidden() {
+            const hidden = !!graphState.rankHidden;
+            if (!await askControlPassword(hidden ? '🔓 순위 다시 공개' : '🔒 순위 비공개')) return;
+            if (!confirm(hidden
+                ? '현황판(user)에서 순위를 다시 보이게 할까요?'
+                : '🔒 지금부터 현황판(user)에서 순위가 보이지 않습니다. (점수는 계속 10분마다 업데이트)\n진행할까요?')) return;
+            db.ref('graph').update({ rankHidden: hidden ? null : true, rankHiddenAt: hidden ? null : Date.now() });
+        }
+
+        function renderRankHideButton() {
+            const btn = document.getElementById('rank-hide-btn');
+            if (!btn) return;
+            const hidden = !!graphState.rankHidden;
+            btn.textContent = hidden ? `🔓 순위 공개 (비공개 중 · ${shortTime(graphState.rankHiddenAt)}~)` : '🔒 순위 비공개';
+            btn.className = hidden ? 'btn btn-undo btn-sm' : 'btn btn-danger btn-sm';
+        }
+
+        // 제목 옆 카운트다운 (1초마다 renderGraphStatus에서 호출)
+        function renderPublishCountdown() {
+            const el = document.getElementById('publish-countdown');
+            if (!el) return;
+            const g = graphState || {};
+            if (g.running && g.startedAt) {
+                const next = GRAPH_INTERVAL - ((Date.now() - g.startedAt) % GRAPH_INTERVAL);
+                el.className = 'publish-countdown running';
+                el.innerHTML = `<span class="live-dot"></span>다음 점수 업데이트까지 <strong>${mmss(next)}</strong>`;
+            } else {
+                el.className = 'publish-countdown';
+                el.textContent = g.endedAt
+                    ? '⏹ 종료됨 · 종료 시점 점수 공개 중'
+                    : '⏸ 대기 중 · 그래프 ▶ 시작 시 10분 카운트다운';
+            }
+        }
+
+        // 그래프 ▶ 시작 / ⏹ 종료 / 💸 투자내역 반영 / 점수표 행 추가·삭제 / 조 정보 수정 / 전체 아이템 초기화 전용 비밀번호 (관리자 입장 비밀번호와 별개로 바꿀 수 있음)
         const CONTROL_PASSWORD = '1234';
 
         // 비밀번호 입력 창 → 맞으면 true, 취소하거나 틀리면 false
@@ -1638,6 +1733,8 @@
                 endedAt: null,
                 points: { p0000: { k: 0, t: now, label: `시작 ${shortTime(now)}`, scores: zero } }
             });
+            recalcTotals();
+            db.ref('published').set(buildPublished(now, `시작 ${shortTime(now)}`));
         }
 
         async function stopGraph() {
@@ -1657,6 +1754,7 @@
                     scores: currentScoresMap()
                 }
             });
+            db.ref('published').set(buildPublished(now, `종료 ${shortTime(now)}`));
         }
 
         function sortedGraphPoints() {
@@ -1719,6 +1817,7 @@
         }
 
         function renderGraphStatus() {
+            renderPublishCountdown();
             const el = document.getElementById('graph-status');
             if (!el) return;
             const g = graphState || {};
@@ -1836,15 +1935,7 @@
             renderBossPanels();
 
             // 4. 팀 관리 테이블
-            document.querySelector('#team-table tbody').innerHTML = teams.map(t => `
-                    <tr>
-                        <td><input type="text" value="${escapeHtml(t.name)}" onchange="editTeamName('${t.id}', this.value)" style="width: 90%;"></td>
-                        <td><input type="text" value="${escapeHtml(t.password || '')}" placeholder="조원 비밀번호" onchange="editTeamPassword('${t.id}', 'password', this)" style="width: 90%;"></td>
-                        <td><input type="text" class="boss-input" value="${escapeHtml(t.bossPassword || '')}" placeholder="부장 비밀번호" onchange="editTeamPassword('${t.id}', 'bossPassword', this)" style="width: 90%;"></td>
-                        <td style="font-weight: bold; color: var(--gold);">${fmt(t.score)} P</td>
-                        <td><button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button></td>
-                    </tr>
-                `).join('');
+            renderTeamTable();
         }
 
         // 구조(팀/행 구성)가 바뀔 때만 표를 다시 그리고, 값 변경은 제자리 갱신 → 입력 중 포커스 유지
@@ -2047,29 +2138,119 @@
             updateDB();
         }
 
-        function editTeamName(id, name) {
-            const t = currentState.teams.find(x => String(x.id) === String(id));
-            if (t && name.trim()) {
-                t.name = name.trim();
-                updateDB();
-            }
+        /* 조 이름·비밀번호 수정: 평소에는 읽기 전용
+           ✏️ 수정 → 비밀번호 확인 → 입력칸으로 수정 → 💾 수정 완료를 눌러야 한 번에 저장 */
+        const TEAM_FIELDS = ['name', 'password', 'bossPassword'];
+        let teamEditMode = false;
+        let lastTeamTableSig = null;
+
+        function renderTeamControls() {
+            const btn = document.getElementById('team-edit-btn');
+            btn.textContent = teamEditMode ? '💾 수정 완료' : '✏️ 수정';
+            btn.className = teamEditMode ? 'btn btn-success' : 'btn';
+            document.getElementById('team-edit-cancel-btn').style.display = teamEditMode ? '' : 'none';
         }
 
-        function editTeamPassword(id, field, el) {
-            const t = currentState.teams.find(x => String(x.id) === String(id));
-            if (!t) return;
-            const pw = el.value.trim();
-            const label = field === 'bossPassword' ? '부장' : '조원';
-            if (!pw) {
-                el.value = t[field] || '';
-                return alert(`${label} 비밀번호는 비워둘 수 없습니다.`);
+        // 수정 중인 입력값 { [조id]: { name, password, bossPassword } }
+        function collectTeamDrafts() {
+            const drafts = {};
+            document.querySelectorAll('#team-table tbody tr[data-team-id]').forEach(tr => {
+                // 읽기 전용 행(입력칸 없음)은 건너뜀 → 수정 모드 진입 시 기존 값으로 채워지도록
+                if (!tr.querySelector('input[data-f]')) return;
+                const d = {};
+                TEAM_FIELDS.forEach(f => {
+                    const el = tr.querySelector(`input[data-f="${f}"]`);
+                    if (el) d[f] = el.value.trim();
+                });
+                drafts[tr.dataset.teamId] = d;
+            });
+            return drafts;
+        }
+
+        // 구조가 바뀔 때만 표를 다시 그림 (수정 중에는 입력값 보존), 총점은 항상 갱신
+        function renderTeamTable() {
+            if (!currentState) return;
+            const tbody = document.querySelector('#team-table tbody');
+            const teams = currentState.teams || [];
+            const sig = JSON.stringify([teamEditMode, teamEditMode
+                ? teams.map(t => t.id)
+                : teams.map(t => [t.id, t.name, t.password, t.bossPassword])]);
+
+            if (sig !== lastTeamTableSig) {
+                const drafts = teamEditMode ? collectTeamDrafts() : {};
+                lastTeamTableSig = sig;
+                tbody.innerHTML = teams.length === 0
+                    ? '<tr><td colspan="5" class="empty-msg">등록된 조가 없습니다.</td></tr>'
+                    : teams.map(t => {
+                        const d = drafts[String(t.id)] || t;
+                        const cell = (f, placeholder, cls = '') => teamEditMode
+                            ? `<input type="text" data-f="${f}" class="${cls}" value="${escapeHtml(d[f] || '')}" placeholder="${placeholder}" style="width: 90%;">`
+                            : `<span class="${f === 'bossPassword' ? 'boss-label' : ''}" style="font-weight: ${f === 'name' ? 700 : 500};">${escapeHtml(t[f] || '-')}</span>`;
+                        return `
+                        <tr data-team-id="${escapeHtml(t.id)}">
+                            <td>${cell('name', '조 이름')}</td>
+                            <td>${cell('password', '조원 비밀번호')}</td>
+                            <td>${cell('bossPassword', '부장 비밀번호', 'boss-input')}</td>
+                            <td style="font-weight: bold; color: var(--gold);" data-team-score></td>
+                            <td>${teamEditMode ? `<button class="btn btn-danger" onclick="deleteTeam('${t.id}')">삭제</button>` : ''}</td>
+                        </tr>`;
+                    }).join('');
             }
-            const dup = findPasswordOwner(pw, id, field);
-            if (dup) {
-                el.value = t[field] || '';
-                return alert(`이미 사용 중인 비밀번호입니다 (${dup}).`);
+
+            teams.forEach(t => {
+                const el = tbody.querySelector(`tr[data-team-id="${CSS.escape(String(t.id))}"] [data-team-score]`);
+                if (el) el.textContent = `${fmt(t.score)} P`;
+            });
+        }
+
+        function setTeamEditMode(on) {
+            teamEditMode = on;
+            renderTeamControls();
+            renderTeamTable();
+        }
+
+        async function toggleTeamEdit() {
+            if (!currentState) return;
+            if (teamEditMode) return saveTeamEdits();
+            if (!await askControlPassword('✏️ 조(팀) 정보 수정')) return;
+            setTeamEditMode(true);
+        }
+
+        function teamDraftsChanged(drafts) {
+            return currentState.teams.some(t => {
+                const d = drafts[String(t.id)];
+                return d && TEAM_FIELDS.some(f => d[f] !== String(t[f] || ''));
+            });
+        }
+
+        function cancelTeamEdit() {
+            if (teamDraftsChanged(collectTeamDrafts()) && !confirm('수정한 내용을 저장하지 않고 취소할까요?')) return;
+            setTeamEditMode(false);
+        }
+
+        function saveTeamEdits() {
+            const drafts = collectTeamDrafts();
+            const next = currentState.teams.map(t => ({ t, d: drafts[String(t.id)] || {
+                name: String(t.name || ''), password: String(t.password || ''), bossPassword: String(t.bossPassword || '')
+            } }));
+
+            // 빈 칸 / 조 안에서 같은 비밀번호 / 전체 비밀번호 중복 검사
+            const owners = {};
+            for (const { d } of next) {
+                if (!d.name) return alert('조 이름은 비워둘 수 없습니다.');
+                if (!d.password || !d.bossPassword) return alert(`${d.name}: 조원 비밀번호와 부장 비밀번호를 모두 입력하세요.`);
+                if (d.password === d.bossPassword) return alert(`${d.name}: 조원 비밀번호와 부장 비밀번호는 서로 달라야 합니다.`);
+                for (const f of ['password', 'bossPassword']) {
+                    const label = `${d.name} ${f === 'bossPassword' ? '부장' : '조원'} 비밀번호`;
+                    if (owners[d[f]]) return alert(`비밀번호 '${d[f]}'가 겹칩니다 (${owners[d[f]]} / ${label}).`);
+                    owners[d[f]] = label;
+                }
             }
-            t[field] = pw;
+
+            if (!teamDraftsChanged(drafts)) return setTeamEditMode(false);
+            if (!confirm('수정한 조 이름·비밀번호를 저장할까요?')) return;
+            next.forEach(({ t, d }) => TEAM_FIELDS.forEach(f => { t[f] = d[f]; }));
+            setTeamEditMode(false);
             updateDB();
         }
 
